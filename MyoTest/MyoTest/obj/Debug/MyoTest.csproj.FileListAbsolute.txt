@@ -1,0 +1,16 @@
+D:\Programming repository\MyoTest\MyoTest\bin\Debug\MyoTest.exe.config
+D:\Programming repository\MyoTest\MyoTest\bin\Debug\MyoTest.exe
+D:\Programming repository\MyoTest\MyoTest\bin\Debug\MyoTest.pdb
+D:\Programming repository\MyoTest\MyoTest\bin\Debug\Microsoft.Contracts.dll
+D:\Programming repository\MyoTest\MyoTest\bin\Debug\MyoSharp.pdb
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest.csprojResolveAssemblyReference.cache
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MainWindow.g.cs
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\App.g.cs
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest_MarkupCompile.cache
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest_MarkupCompile.lref
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MainWindow.baml
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest.g.resources
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest.Properties.Resources.resources
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest.csproj.GenerateResource.Cache
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest.exe
+D:\Programming repository\MyoTest\MyoTest\obj\Debug\MyoTest.pdb
