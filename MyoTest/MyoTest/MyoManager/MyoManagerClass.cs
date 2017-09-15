@@ -9,6 +9,9 @@ using MyoSharp.Communication;
 using MyoSharp.Device;
 using MyoSharp.Exceptions;
 using MyoSharp.Poses;
+using System.Net.Sockets;
+using System.Net;
+using System.Windows.Media.Media3D;
 
 namespace MyoTest.MyoManager
 {
@@ -17,6 +20,15 @@ namespace MyoTest.MyoManager
         IChannel channel;
         public IHub hub;
         MainWindow mWindow;
+
+        Socket sending_socket;
+        IPAddress send_to_address;
+        //assign default values
+        private Int32 gripPressure=0;
+        private float orientationW=0;
+        private float orientationX=0;
+        private float orientationY=0;
+        private float orientationZ=0;
 
         Int32[] firstPreEmgValue = new Int32[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         Int32[] secPreEmgValue = new Int32[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -56,13 +68,50 @@ namespace MyoTest.MyoManager
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
         {
 
-            CheckEmg(e);
+            CalculateGripPressure(e);
+            SendData();
         }
 
         private void Myo_OrientationAcquired(object sender, OrientationDataEventArgs e)
         {
 
-            CheckOrientation(e);
+            CalculateOrientation(e);
+            SendData();
+        }
+
+        /// <summary>
+        /// Method to broadcast packets of data
+        /// </summary>
+        /// <param name="pressure"></param>
+        public void SendData()
+        {
+
+            sending_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            send_to_address = IPAddress.Parse("127.0.0.1");
+            IPEndPoint sending_end_point = new IPEndPoint(send_to_address, 11002);
+
+            SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
+            socketEventArg.RemoteEndPoint = sending_end_point;
+
+            string s = "{ \"sensorName\":\"Myo\",\"attributes\":[{\"attributeName\":\"GripPressure\",\"attributteValue\":\"" + gripPressure +
+                "\"},{\"attributeName\":\"orientationW\",\"attributteValue\":\"" + orientationW +
+                "\" }, { \"attributeName\":\"orientationX\", \"attributteValue\":\"" + orientationX + 
+                "\"},{\"attributeName\":\"orientationY\",\"attributteValue\":\"" + orientationY +
+                "\" },{\"attributeName\":\"orientationZ\",\"attributteValue\":\"" + orientationZ +
+                "\" },] }";
+
+            byte[] send_buffer = Encoding.UTF8.GetBytes(s);
+
+            try
+            {
+                socketEventArg.SetBuffer(send_buffer, 0, send_buffer.Length);
+                sending_socket.SendToAsync(socketEventArg);
+                Debug.WriteLine("text sent");
+            }
+            catch
+            {
+                Debug.WriteLine("not initialized");
+            }
         }
 
         /// <summary>
@@ -71,10 +120,10 @@ namespace MyoTest.MyoManager
         /// 
         /// </summary>
         /// <param name="e"></param>
-        void CheckEmg(EmgDataEventArgs e)
+        void CalculateGripPressure(EmgDataEventArgs e)
         {
             int[] emgTension = new int[8];
-            Int32 avgTension = 0;
+            Int32 gripPressure = 0;
             for (int i = 0; i < 7; i++)
             {
                 try
@@ -97,17 +146,9 @@ namespace MyoTest.MyoManager
             }
 
             //add all value from emgTension and assign it to avgTension
-            Array.ForEach(emgTension, delegate (int i) { avgTension += i; });
-            mWindow.UpdateEmg(avgTension);
-            LoadEmg(e);
-        }
+            Array.ForEach(emgTension, delegate (int i) { gripPressure += i; });
+            mWindow.UpdateGripPressure(gripPressure);
 
-        /// <summary>
-        /// load and save the first and second frame of EMG[] value for comparision
-        /// </summary>
-        /// <param name="e"></param>
-        private void LoadEmg(EmgDataEventArgs e)
-        {
             try
             {
                 for (int i = 0; i < 7; i++)
@@ -120,13 +161,19 @@ namespace MyoTest.MyoManager
             {
                 Debug.WriteLine("No emg value");
             }
-
         }
 
-
-        public void CheckOrientation(OrientationDataEventArgs e)
+        /// <summary>
+        /// Method called upon receiving the even myodata received. It passes on the orientation data to the UpdateOrientation class in Mainwindow
+        /// </summary>
+        /// <param name="e"></param>
+        public void CalculateOrientation(OrientationDataEventArgs e)
         {
-            //mWindow.UpdateOrientation(e.Roll.ToString(), e.Yaw.ToString(), e.Pitch.ToString());
+            orientationW = e.Orientation.W;
+            orientationX = e.Orientation.X;
+            orientationY = e.Orientation.Y;
+            orientationZ = e.Orientation.Z;
+        mWindow.UpdateOrientation(orientationW, orientationX, orientationY, orientationZ);
         }
     }
 }

@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Windows.Threading;
 using System.Net.Sockets;
 using System.Net;
+using System.Windows.Media.Media3D;
 
 namespace MyoTest
 {
@@ -29,8 +30,7 @@ namespace MyoTest
     /// </summary>
     public partial class MainWindow : Window
     {
-        Socket sending_socket;
-        IPAddress send_to_address;
+
         MyoManager.MyoManagerClass myoManager = new MyoManager.MyoManagerClass();
 
         public MainWindow()
@@ -40,38 +40,33 @@ namespace MyoTest
             
         }
 
-        public void SendData(Int32 emg)
-        {
-
-            sending_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            send_to_address = IPAddress.Parse("127.0.0.1");
-            IPEndPoint sending_end_point = new IPEndPoint(send_to_address, 11002);
-
-            SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
-            socketEventArg.RemoteEndPoint = sending_end_point;
-
-            byte[] send_buffer = Encoding.UTF8.GetBytes(emg.ToString());
-
-            try
-            {
-                socketEventArg.SetBuffer(send_buffer, 0, send_buffer.Length);
-                sending_socket.SendToAsync(socketEventArg);
-                Debug.WriteLine("text sent");
-            }
-            catch
-            {
-                Debug.WriteLine("not initialized");
-            }
-        }
-
-        public void UpdateEmg(Int32 emg)
+        /// <summary>
+        /// Method to update the grip textbox and assign the value to gripPressure var
+        /// </summary>
+        /// <param name="g"></param>
+        public void UpdateGripPressure(Int32 g)
         {
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
                         () =>
                         {
-                            EmgTxt.Text =emg.ToString();
+                            GripTxt.Text = g.ToString();
                         }));
-            SendData(emg);
         }
+
+        /// <summary>
+        /// Method to update the orientation textbox and assign the value of orientation
+        /// </summary>
+        /// <param name="ww"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        public void UpdateOrientation(float w, float x, float y, float z)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            OrientationTxt.Text = w.ToString()+" "+x.ToString()+" "+y.ToString() + " " + z.ToString(); ;
+                        }));
+    }
     }
 }
