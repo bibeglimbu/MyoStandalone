@@ -111,7 +111,13 @@ namespace MyoTest.MyoManager
             {
                 Debug.WriteLine("not initialized");
             }
-        }
+
+            gripPressure = 0;
+            orientationW = 0;
+            orientationX = 0;
+            orientationY = 0;
+            orientationZ = 0;
+    }
 
         /// <summary>
         /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
