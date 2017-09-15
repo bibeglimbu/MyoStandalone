@@ -62,7 +62,6 @@ namespace MyoTest.MyoManager
             // start listening for Myo data
             channel.StartListening();
 
-
         }
 
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
@@ -123,7 +122,6 @@ namespace MyoTest.MyoManager
         void CalculateGripPressure(EmgDataEventArgs e)
         {
             int[] emgTension = new int[8];
-            Int32 gripPressure = 0;
             for (int i = 0; i < 7; i++)
             {
                 try
