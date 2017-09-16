@@ -67,6 +67,45 @@ namespace MyoTest
                         {
                             OrientationTxt.Text = w.ToString()+" "+x.ToString()+" "+y.ToString() + " " + z.ToString(); ;
                         }));
-    }
+        }
+
+        /// <summary>
+        /// Method to update the grip textbox and assign the value to gripPressure var
+        /// </summary>
+        /// <param name="g"></param>
+        public void UpdateRoll(double roll)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            RollTxt.Text = roll.ToString();
+                        }));
+        }
+
+        /// <summary>
+        /// Method to update the grip textbox and assign the value to gripPressure var
+        /// </summary>
+        /// <param name="g"></param>
+        public void UpdatePitch(double pitch)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            PitchTxt.Text = pitch.ToString();
+                        }));
+        }
+
+        /// <summary>
+        /// Method to update the grip textbox and assign the value to gripPressure var
+        /// </summary>
+        /// <param name="g"></param>
+        public void UpdateYaw(double yaw)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            YawTxt.Text = yaw.ToString();
+                        }));
+        }
     }
 }

@@ -29,6 +29,9 @@ namespace MyoTest.MyoManager
         private float orientationX=0;
         private float orientationY=0;
         private float orientationZ=0;
+        private double myoRoll;
+        private double myoYaw;
+        private double myoPitch;
 
         Int32[] firstPreEmgValue = new Int32[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         Int32[] secPreEmgValue = new Int32[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -78,6 +81,7 @@ namespace MyoTest.MyoManager
             SendData();
         }
 
+
         /// <summary>
         /// Method to broadcast packets of data
         /// </summary>
@@ -97,6 +101,9 @@ namespace MyoTest.MyoManager
                 "\" }, { \"attributeName\":\"orientationX\", \"attributteValue\":\"" + orientationX + 
                 "\"},{\"attributeName\":\"orientationY\",\"attributteValue\":\"" + orientationY +
                 "\" },{\"attributeName\":\"orientationZ\",\"attributteValue\":\"" + orientationZ +
+                "\" },{\"attributeName\":\"myoRoll\",\"attributteValue\":\"" + myoRoll +
+                "\" },{\"attributeName\":\"myoPitch\",\"attributteValue\":\"" + myoPitch +
+                "\" },{\"attributeName\":\"myoYaw\",\"attributteValue\":\"" + myoYaw +
                 "\" },] }";
 
             byte[] send_buffer = Encoding.UTF8.GetBytes(s);
@@ -113,10 +120,10 @@ namespace MyoTest.MyoManager
             }
 
             gripPressure = 0;
-            orientationW = 0;
-            orientationX = 0;
-            orientationY = 0;
-            orientationZ = 0;
+            //orientationW = 0;
+            //orientationX = 0;
+            //orientationY = 0;
+            //orientationZ = 0;
     }
 
         /// <summary>
@@ -177,7 +184,14 @@ namespace MyoTest.MyoManager
             orientationX = e.Orientation.X;
             orientationY = e.Orientation.Y;
             orientationZ = e.Orientation.Z;
-        mWindow.UpdateOrientation(orientationW, orientationX, orientationY, orientationZ);
+            mWindow.UpdateOrientation(orientationW, orientationX, orientationY, orientationZ);
+
+            myoRoll = e.Roll;
+            mWindow.UpdateRoll(myoRoll);
+            myoPitch = e.Pitch;
+            mWindow.UpdatePitch(myoPitch);
+            myoYaw = e.Yaw;
+            mWindow.UpdateYaw(myoYaw);
         }
     }
 }
