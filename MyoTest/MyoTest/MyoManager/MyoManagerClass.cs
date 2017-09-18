@@ -24,7 +24,7 @@ namespace MyoTest.MyoManager
         Socket sending_socket;
         IPAddress send_to_address;
         //assign default values
-        private Int32 gripPressure=0;
+        private Int32 gripEMG=0;
         private float orientationW=0;
         private float orientationX=0;
         private float orientationY=0;
@@ -96,7 +96,7 @@ namespace MyoTest.MyoManager
             SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
             socketEventArg.RemoteEndPoint = sending_end_point;
 
-            string s = "{ \"sensorName\":\"Myo\",\"attributes\":[{\"attributeName\":\"GripPressure\",\"attributteValue\":\"" + gripPressure +
+            string s = "{ \"sensorName\":\"Myo\",\"attributes\":[{\"attributeName\":\"GripEMG\",\"attributteValue\":\"" + gripEMG +
                 "\"},{\"attributeName\":\"orientationW\",\"attributteValue\":\"" + orientationW +
                 "\" }, { \"attributeName\":\"orientationX\", \"attributteValue\":\"" + orientationX + 
                 "\"},{\"attributeName\":\"orientationY\",\"attributteValue\":\"" + orientationY +
@@ -119,7 +119,7 @@ namespace MyoTest.MyoManager
                 Debug.WriteLine("not initialized");
             }
 
-            gripPressure = 0;
+            gripEMG = 0;
             //orientationW = 0;
             //orientationX = 0;
             //orientationY = 0;
@@ -157,8 +157,8 @@ namespace MyoTest.MyoManager
             }
 
             //add all value from emgTension and assign it to avgTension
-            Array.ForEach(emgTension, delegate (int i) { gripPressure += i; });
-            mWindow.UpdateGripPressure(gripPressure);
+            Array.ForEach(emgTension, delegate (int i) { gripEMG += i; });
+            mWindow.UpdateGripPressure(gripEMG);
 
             try
             {
