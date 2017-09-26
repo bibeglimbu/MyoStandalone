@@ -104,7 +104,7 @@ namespace MyoTest.MyoManager
                 "\" },{\"attributeName\":\"myoRoll\",\"attributteValue\":\"" + myoRoll +
                 "\" },{\"attributeName\":\"myoPitch\",\"attributteValue\":\"" + myoPitch +
                 "\" },{\"attributeName\":\"myoYaw\",\"attributteValue\":\"" + myoYaw +
-                "\" },] }";
+                "\" }] }";
 
             byte[] send_buffer = Encoding.UTF8.GetBytes(s);
 
