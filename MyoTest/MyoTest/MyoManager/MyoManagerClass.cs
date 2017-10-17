@@ -90,7 +90,7 @@ namespace MyoTest.MyoManager
         {
 
             sending_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            send_to_address = IPAddress.Parse("127.0.0.1");
+            send_to_address = IPAddress.Parse("192.168.0.198");
             IPEndPoint sending_end_point = new IPEndPoint(send_to_address, 11002);
 
             SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
