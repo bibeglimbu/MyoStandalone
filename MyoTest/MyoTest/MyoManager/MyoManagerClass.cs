@@ -15,29 +15,29 @@ using System.Windows.Media.Media3D;
 
 namespace MyoTest.MyoManager
 {
-    class MyoManagerClass
+    class MyoManager
     {
         IChannel channel;
-        public IHub hub;
+        public static IHub hub;
         MainWindow mWindow;
 
-        Socket sending_socket;
-        IPAddress send_to_address;
-        //assign default values
-        private Int32 gripEMG=0;
+        private int gripEMG = 0;
         private float orientationW=0;
         private float orientationX=0;
         private float orientationY=0;
         private float orientationZ=0;
-        private double myoRoll;
-        private double myoYaw;
-        private double myoPitch;
 
-        Int32[] firstPreEmgValue = new Int32[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-        Int32[] secPreEmgValue = new Int32[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        private DateTime lastExecutionEmg;
+        private DateTime lastExecutionVibrate;
+
+
+        int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+
 
         public void InitMyoManagerHub(MainWindow m)
         {
+            lastExecutionEmg = DateTime.Now;
+            lastExecutionVibrate = DateTime.Now;
             this.mWindow = m;
             channel = Channel.Create(
                 ChannelDriver.Create(ChannelBridge.Create(),
@@ -62,25 +62,72 @@ namespace MyoTest.MyoManager
                 e.Myo.EmgDataAcquired -= Myo_EmgDataAcquired;
             };
 
+            try
+            {
+                HubConnector.myConnector.startRecordingEvent += MyConnector_startRecordingEvent;
+                HubConnector.myConnector.stopRecordingEvent += MyConnector_stopRecordingEvent;
+                setValueNames();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("MyoManager error at connecting the hub");
+            }
+
             // start listening for Myo data
             channel.StartListening();
 
         }
 
-        private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
+        #region Send data
+        public void setValueNames()
+        {
+            List<string> names = new List<string>();
+            names.Add("GripPressure");
+            HubConnector.SetValuesName(names);
+
+        }
+
+        private void MyConnector_startRecordingEvent(Object sender)
         {
 
-            CalculateGripPressure(e);
-            SendData();
+        }
+
+        private void MyConnector_stopRecordingEvent(Object sender)
+        {
+
+        }
+        #endregion
+
+        #region MyoEvents
+        private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
+        {
+            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.2)
+            {
+                CalculateGripPressure(e);
+                //SendData();
+               
+            }
+            if((DateTime.Now - lastExecutionVibrate).TotalSeconds >= 1)
+            {
+                if (gripEMG >= 6)
+                {
+                    Debug.WriteLine("gripEmg" + gripEMG);
+                    pingMyo();
+                }
+            }
+
+            gripEMG = 0;
         }
 
         private void Myo_OrientationAcquired(object sender, OrientationDataEventArgs e)
         {
-
-            CalculateOrientation(e);
-            SendData();
+            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.2)
+            {
+                CalculateOrientation(e);
+                //SendData();
+            }
         }
-
+        #endregion
 
         /// <summary>
         /// Method to broadcast packets of data
@@ -88,65 +135,48 @@ namespace MyoTest.MyoManager
         /// <param name="pressure"></param>
         public void SendData()
         {
-
-            sending_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            send_to_address = IPAddress.Parse("192.168.0.198");
-            IPEndPoint sending_end_point = new IPEndPoint(send_to_address, 11002);
-
-            SocketAsyncEventArgs socketEventArg = new SocketAsyncEventArgs();
-            socketEventArg.RemoteEndPoint = sending_end_point;
-
-            string s = "{ \"sensorName\":\"Myo\",\"attributes\":[{\"attributeName\":\"GripEMG\",\"attributteValue\":\"" + gripEMG +
-                "\"},{\"attributeName\":\"orientationW\",\"attributteValue\":\"" + orientationW +
-                "\" }, { \"attributeName\":\"orientationX\", \"attributteValue\":\"" + orientationX + 
-                "\"},{\"attributeName\":\"orientationY\",\"attributteValue\":\"" + orientationY +
-                "\" },{\"attributeName\":\"orientationZ\",\"attributteValue\":\"" + orientationZ +
-                "\" },{\"attributeName\":\"myoRoll\",\"attributteValue\":\"" + myoRoll +
-                "\" },{\"attributeName\":\"myoPitch\",\"attributteValue\":\"" + myoPitch +
-                "\" },{\"attributeName\":\"myoYaw\",\"attributteValue\":\"" + myoYaw +
-                "\" }] }";
-
-            byte[] send_buffer = Encoding.UTF8.GetBytes(s);
-
             try
             {
-                socketEventArg.SetBuffer(send_buffer, 0, send_buffer.Length);
-                sending_socket.SendToAsync(socketEventArg);
-                Debug.WriteLine("text sent");
+                List<string> values = new List<string>();
+                values.Add(gripEMG.ToString());
+                HubConnector.SendData(values);
+                Debug.WriteLine("MyoManager/ The last value sent: " + values[values.Count - 1].ToString());
             }
-            catch
+            catch (Exception ex)
             {
-                Debug.WriteLine("not initialized");
+                Debug.WriteLine(ex.StackTrace);
             }
-
-            gripEMG = 0;
-            //orientationW = 0;
-            //orientationX = 0;
-            //orientationY = 0;
-            //orientationZ = 0;
+            
     }
 
         /// <summary>
         /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
         /// else assign 0. It means that much variation(100 to -100) was observed propotional to higher tension in muscle. 
-        /// 
         /// </summary>
         /// <param name="e"></param>
         void CalculateGripPressure(EmgDataEventArgs e)
         {
+            //Threshold to determind the fluctuation
+            int emgThreshold = 40;
+            int[] currentEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
             int[] emgTension = new int[8];
-            for (int i = 0; i < 7; i++)
+
+            //iterate through all the sensors and store the 1/0  in emg tension depending if the sum of previous frame of data and current frame is less than threshold
+            // 0 meaning no tension and 100 meaning lots of tension
+            for (int i = 0; i <= 7; i++)
             {
+                currentEmgValue[i] = Math.Abs(e.EmgData.GetDataForSensor(i));
+                //Debug.WriteLine("MyoManager/" + i + " " + Math.Abs(e.EmgData.GetDataForSensor(i)));
                 try
                 {
-                    if ((firstPreEmgValue[i] + secPreEmgValue[i] + Math.Abs(e.EmgData.GetDataForSensor(i))) <= 20)
+                    if (currentEmgValue[i] >= emgThreshold)
                     {
-                        emgTension[i] = 0;
+                        emgTension[i] = 1;
 
                     }
                     else
                     {
-                        emgTension[i] = 1;
+                        emgTension[i] = 0;
                     }
 
                 }
@@ -156,7 +186,7 @@ namespace MyoTest.MyoManager
                 }
             }
 
-            //add all value from emgTension and assign it to avgTension
+            //add all value from emgTension and assign it to gripEmg
             Array.ForEach(emgTension, delegate (int i) { gripEMG += i; });
             mWindow.UpdateGripPressure(gripEMG);
 
@@ -164,8 +194,7 @@ namespace MyoTest.MyoManager
             {
                 for (int i = 0; i < 7; i++)
                 {
-                    secPreEmgValue[i] = firstPreEmgValue[i];
-                    firstPreEmgValue[i] = Math.Abs(e.EmgData.GetDataForSensor(i));
+                    preEmgValue[i] = currentEmgValue[i];
                 }
             }
             catch
@@ -186,12 +215,18 @@ namespace MyoTest.MyoManager
             orientationZ = e.Orientation.Z;
             mWindow.UpdateOrientation(orientationW, orientationX, orientationY, orientationZ);
 
-            myoRoll = e.Roll;
-            mWindow.UpdateRoll(myoRoll);
-            myoPitch = e.Pitch;
-            mWindow.UpdatePitch(myoPitch);
-            myoYaw = e.Yaw;
-            mWindow.UpdateYaw(myoYaw);
+            //myoRoll = e.Roll;
+            //mWindow.UpdateRoll(myoRoll);
+            //myoPitch = e.Pitch;
+            //mWindow.UpdatePitch(myoPitch);
+            //myoYaw = e.Yaw;
+            //mWindow.UpdateYaw(myoYaw);
+        }
+
+
+        public static void pingMyo()
+        {
+            hub.Myos.Last().Vibrate(VibrationType.Short);
         }
     }
 }

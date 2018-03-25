@@ -1,27 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
-using MyoSharp.Communication;
-using MyoSharp.Device;
-using MyoSharp.Exceptions;
-using MyoSharp.Poses;
-using System.Diagnostics;
 using System.Windows.Threading;
-using System.Net.Sockets;
-using System.Net;
-using System.Windows.Media.Media3D;
 
 namespace MyoTest
 {
@@ -31,11 +10,12 @@ namespace MyoTest
     public partial class MainWindow : Window
     {
 
-        MyoManager.MyoManagerClass myoManager = new MyoManager.MyoManagerClass();
+        MyoManager.MyoManager myoManager = new MyoManager.MyoManager();
 
         public MainWindow()
         {
             InitializeComponent();
+            HubConnector.StartConnection();
             myoManager.InitMyoManagerHub(this);
             
         }
@@ -66,45 +46,6 @@ namespace MyoTest
                         () =>
                         {
                             OrientationTxt.Text = w.ToString()+" "+x.ToString()+" "+y.ToString() + " " + z.ToString(); ;
-                        }));
-        }
-
-        /// <summary>
-        /// Method to update the grip textbox and assign the value to gripPressure var
-        /// </summary>
-        /// <param name="g"></param>
-        public void UpdateRoll(double roll)
-        {
-            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
-                        () =>
-                        {
-                            RollTxt.Text = roll.ToString();
-                        }));
-        }
-
-        /// <summary>
-        /// Method to update the grip textbox and assign the value to gripPressure var
-        /// </summary>
-        /// <param name="g"></param>
-        public void UpdatePitch(double pitch)
-        {
-            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
-                        () =>
-                        {
-                            PitchTxt.Text = pitch.ToString();
-                        }));
-        }
-
-        /// <summary>
-        /// Method to update the grip textbox and assign the value to gripPressure var
-        /// </summary>
-        /// <param name="g"></param>
-        public void UpdateYaw(double yaw)
-        {
-            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
-                        () =>
-                        {
-                            YawTxt.Text = yaw.ToString();
                         }));
         }
     }
