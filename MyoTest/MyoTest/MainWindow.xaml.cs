@@ -15,7 +15,6 @@ namespace MyoTest
         public MainWindow()
         {
             InitializeComponent();
-            HubConnector.StartConnection();
             myoManager.InitMyoManagerHub(this);
             
         }
@@ -46,6 +45,15 @@ namespace MyoTest
                         () =>
                         {
                             OrientationTxt.Text = w.ToString()+" "+x.ToString()+" "+y.ToString() + " " + z.ToString(); ;
+                        }));
+        }
+
+        public void UpdateDebug(String s)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            DebugTxt.Text = s;
                         }));
         }
     }

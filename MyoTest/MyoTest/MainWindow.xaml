@@ -17,8 +17,8 @@
                 <ColumnDefinition Width=".5*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0"  Text="Debug"/>
-            <TextBox Grid.Column="1"  Name="DebugTxt" HorizontalAlignment="Left" Height="50" Width="250" Margin="0,0,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" />
+            <TextBlock Grid.Column="0" Margin="0,25,0,0" Text="Debug"/>
+            <TextBox Grid.Column="1"  Name="DebugTxt" HorizontalAlignment="Left" Height="50" Width="250" Margin="0,25,0,0" TextWrapping="Wrap" Text="DebugText" VerticalAlignment="Top" />
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

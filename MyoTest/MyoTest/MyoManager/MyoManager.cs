@@ -29,18 +29,31 @@ namespace MyoTest.MyoManager
 
         private DateTime lastExecutionEmg;
         private DateTime lastExecutionVibrate;
+        private DateTime lastExecutionOrientation;
 
 
         int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
+        public ConnectorHub.ConnectorHub myConnector;
+        public ConnectorHub.FeedbackHub myFeedback;
+        private bool vibrateMyo=true;
+
+        public MyoManager()
+        {
+            myConnector = new ConnectorHub.ConnectorHub();
+            myConnector.init();
+            myFeedback = new ConnectorHub.FeedbackHub();
+            myFeedback.init();
+            myConnector.sendReady();
+        }
+        
 
         public void InitMyoManagerHub(MainWindow m)
         {
             lastExecutionEmg = DateTime.Now;
             lastExecutionVibrate = DateTime.Now;
             this.mWindow = m;
-            channel = Channel.Create(
-                ChannelDriver.Create(ChannelBridge.Create(),
+            channel = Channel.Create( ChannelDriver.Create(ChannelBridge.Create(),
                 MyoErrorHandlerDriver.Create(MyoErrorHandlerBridge.Create())));
             hub = Hub.Create(channel);
 
@@ -64,9 +77,10 @@ namespace MyoTest.MyoManager
 
             try
             {
-                HubConnector.myConnector.startRecordingEvent += MyConnector_startRecordingEvent;
-                HubConnector.myConnector.stopRecordingEvent += MyConnector_stopRecordingEvent;
+                myConnector.startRecordingEvent += MyConnector_startRecordingEvent;
+                myConnector.stopRecordingEvent += MyConnector_stopRecordingEvent;
                 setValueNames();
+                myFeedback.feedbackReceivedEvent += MyFeedback_feedbackReceivedEvent;
             }
             catch (Exception e)
             {
@@ -82,8 +96,11 @@ namespace MyoTest.MyoManager
         public void setValueNames()
         {
             List<string> names = new List<string>();
-            names.Add("GripPressure");
-            HubConnector.SetValuesName(names);
+            names.Add("orientationW");
+            names.Add("orientationX");
+            names.Add("orientationY");
+            names.Add("orientationZ");
+            myConnector.setValuesName(names);
 
         }
 
@@ -101,19 +118,27 @@ namespace MyoTest.MyoManager
         #region MyoEvents
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
         {
-            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.2)
+            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
             {
+                //there is no need to send emg data
                 CalculateGripPressure(e);
-                //SendData();
-               
+                lastExecutionEmg = DateTime.Now;
             }
-            if((DateTime.Now - lastExecutionVibrate).TotalSeconds >= 1)
+
+            if (vibrateMyo == true)
             {
-                if (gripEMG >= 6)
+                if (gripEMG >= 4)
                 {
                     Debug.WriteLine("gripEmg" + gripEMG);
                     pingMyo();
+                    lastExecutionVibrate = DateTime.Now;
+                    vibrateMyo = false;
                 }
+            }
+            if ((DateTime.Now - lastExecutionVibrate).TotalSeconds >= 0.5)
+            {
+                vibrateMyo = true;
+
             }
 
             gripEMG = 0;
@@ -121,10 +146,11 @@ namespace MyoTest.MyoManager
 
         private void Myo_OrientationAcquired(object sender, OrientationDataEventArgs e)
         {
-            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.2)
+            if ((DateTime.Now - lastExecutionOrientation).TotalSeconds >= 0.5)
             {
                 CalculateOrientation(e);
-                //SendData();
+                SendData();
+                lastExecutionOrientation = DateTime.Now;
             }
         }
         #endregion
@@ -138,9 +164,12 @@ namespace MyoTest.MyoManager
             try
             {
                 List<string> values = new List<string>();
-                values.Add(gripEMG.ToString());
-                HubConnector.SendData(values);
-                Debug.WriteLine("MyoManager/ The last value sent: " + values[values.Count - 1].ToString());
+                values.Add(orientationW.ToString());
+                values.Add(orientationX.ToString());
+                values.Add(orientationY.ToString());
+                values.Add(orientationZ.ToString());
+                myConnector.storeFrame(values);
+                Debug.WriteLine("MyoManager/ The size of value: " + values.Count);
             }
             catch (Exception ex)
             {
@@ -157,7 +186,7 @@ namespace MyoTest.MyoManager
         void CalculateGripPressure(EmgDataEventArgs e)
         {
             //Threshold to determind the fluctuation
-            int emgThreshold = 40;
+            int emgThreshold = 15;
             int[] currentEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
             int[] emgTension = new int[8];
 
@@ -227,6 +256,23 @@ namespace MyoTest.MyoManager
         public static void pingMyo()
         {
             hub.Myos.Last().Vibrate(VibrationType.Short);
+        }
+
+        private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
+        {
+            Debug.WriteLine("Myo: Learninghublistener feedback received: " + feedback);
+
+            ReadStream(feedback);
+        }
+
+        private void ReadStream(String s)
+        {
+            if (s.Contains("Myo"))
+            {
+                MyoTest.MyoManager.MyoManager.pingMyo();
+                mWindow.UpdateDebug(s);
+            }
+
         }
     }
 }
