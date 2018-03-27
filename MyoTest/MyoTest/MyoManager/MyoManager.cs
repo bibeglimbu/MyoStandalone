@@ -33,6 +33,7 @@ namespace MyoTest.MyoManager
 
 
         int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public ConnectorHub.ConnectorHub myConnector;
         public ConnectorHub.FeedbackHub myFeedback;
@@ -100,6 +101,10 @@ namespace MyoTest.MyoManager
             names.Add("orientationX");
             names.Add("orientationY");
             names.Add("orientationZ");
+            for(int i=0;i<8;i++ )
+            {
+                names.Add("pod" + i);
+            }
             myConnector.setValuesName(names);
 
         }
@@ -121,16 +126,20 @@ namespace MyoTest.MyoManager
             if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
             {
                 //there is no need to send emg data
+                
                 CalculateGripPressure(e);
+                SendData();
                 lastExecutionEmg = DateTime.Now;
             }
 
+            //vibrate only twice a sec
             if (vibrateMyo == true)
             {
                 if (gripEMG >= 4)
                 {
                     Debug.WriteLine("gripEmg" + gripEMG);
                     pingMyo();
+                    myConnector.sendFeedback("Read Grip the pen gently");
                     lastExecutionVibrate = DateTime.Now;
                     vibrateMyo = false;
                 }
@@ -148,8 +157,8 @@ namespace MyoTest.MyoManager
         {
             if ((DateTime.Now - lastExecutionOrientation).TotalSeconds >= 0.5)
             {
-                CalculateOrientation(e);
-                SendData();
+                //CalculateOrientation(e);
+                //SendData();
                 lastExecutionOrientation = DateTime.Now;
             }
         }
@@ -168,7 +177,12 @@ namespace MyoTest.MyoManager
                 values.Add(orientationX.ToString());
                 values.Add(orientationY.ToString());
                 values.Add(orientationZ.ToString());
+                for(int i= 0; i < 8; i++)
+                {
+                    values.Add(storeEmgValue[i].ToString());
+                }
                 myConnector.storeFrame(values);
+                Debug.WriteLine("MyoManager.values"+values.Count);
                 Debug.WriteLine("MyoManager/ The size of value: " + values.Count);
             }
             catch (Exception ex)
@@ -194,6 +208,7 @@ namespace MyoTest.MyoManager
             // 0 meaning no tension and 100 meaning lots of tension
             for (int i = 0; i <= 7; i++)
             {
+                storeEmgValue[i] = e.EmgData.GetDataForSensor(i);
                 currentEmgValue[i] = Math.Abs(e.EmgData.GetDataForSensor(i));
                 //Debug.WriteLine("MyoManager/" + i + " " + Math.Abs(e.EmgData.GetDataForSensor(i)));
                 try
@@ -243,13 +258,6 @@ namespace MyoTest.MyoManager
             orientationY = e.Orientation.Y;
             orientationZ = e.Orientation.Z;
             mWindow.UpdateOrientation(orientationW, orientationX, orientationY, orientationZ);
-
-            //myoRoll = e.Roll;
-            //mWindow.UpdateRoll(myoRoll);
-            //myoPitch = e.Pitch;
-            //mWindow.UpdatePitch(myoPitch);
-            //myoYaw = e.Yaw;
-            //mWindow.UpdateYaw(myoYaw);
         }
 
 
