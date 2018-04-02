@@ -35,7 +35,7 @@ namespace MyoTest.MyoManager
         int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        public ConnectorHub.ConnectorHub myConnector;
+        public static ConnectorHub.ConnectorHub myConnector;
         public ConnectorHub.FeedbackHub myFeedback;
         private bool vibrateMyo=true;
 
@@ -78,8 +78,6 @@ namespace MyoTest.MyoManager
 
             try
             {
-                myConnector.startRecordingEvent += MyConnector_startRecordingEvent;
-                myConnector.stopRecordingEvent += MyConnector_stopRecordingEvent;
                 setValueNames();
                 myFeedback.feedbackReceivedEvent += MyFeedback_feedbackReceivedEvent;
             }
@@ -106,16 +104,6 @@ namespace MyoTest.MyoManager
                 names.Add("pod" + i);
             }
             myConnector.setValuesName(names);
-
-        }
-
-        private void MyConnector_startRecordingEvent(Object sender)
-        {
-
-        }
-
-        private void MyConnector_stopRecordingEvent(Object sender)
-        {
 
         }
         #endregion

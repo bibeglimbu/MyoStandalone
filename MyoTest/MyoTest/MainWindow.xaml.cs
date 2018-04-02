@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -11,12 +12,34 @@ namespace MyoTest
     {
 
         MyoManager.MyoManager myoManager = new MyoManager.MyoManager();
+        //bool value for switching the record button text and the color
+        public static bool isRecordingData = false;
 
         public MainWindow()
         {
             InitializeComponent();
             myoManager.InitMyoManagerHub(this);
-            
+            MyoManager.MyoManager.myConnector.startRecordingEvent += MyConnector_startRecordingEvent;
+            MyoManager.MyoManager.myConnector.stopRecordingEvent += MyConnector_stopRecordingEvent;
+
+        }
+
+        private void MyConnector_stopRecordingEvent(object sender)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            StartRecordingData();
+                        }));
+        }
+
+        private void MyConnector_startRecordingEvent(object sender)
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            StartRecordingData();
+                        }));
         }
 
         /// <summary>
@@ -55,6 +78,28 @@ namespace MyoTest
                         {
                             DebugTxt.Text = s;
                         }));
+        }
+
+        private void RecordingButton_Click(object sender, RoutedEventArgs e)
+        {
+            StartRecordingData();
+        }
+
+        public void StartRecordingData()
+        {
+
+            if (isRecordingData == false)
+            {
+                isRecordingData = true;
+                RecordingButton.Content = "Stop Recording";
+
+            }
+            else if (isRecordingData == true)
+            {
+                isRecordingData = false;
+                RecordingButton.Content = "Start Recording";
+            }
+            Debug.WriteLine("isRecordingData= " + isRecordingData);
         }
     }
 }

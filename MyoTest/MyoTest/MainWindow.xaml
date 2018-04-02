@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MyoTest"
         mc:Ignorable="d"
-        Title="MyoConnectorHub" Height="250" Width="400">
+        Title="MyoConnectorHub" Height="350" Width="400">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1.25*"/>
+            <RowDefinition Height="1*"/>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
@@ -26,7 +27,7 @@
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Grip Pressure"/>
-            <TextBox Grid.Column="1" Name="GripTxt" HorizontalAlignment="Left" Height="40" Width="120" Margin="0,0,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" />
+            <TextBox Grid.Column="1" Name="GripTxt" HorizontalAlignment="Left" Height="40" Width="120" Margin="0,10,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" />
         </Grid>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
@@ -34,7 +35,12 @@
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Orientation"/>
-            <TextBox Grid.Column="1" Name="OrientationTxt" HorizontalAlignment="Left" Height="50" Width="250" Margin="0,0,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" />
+            <TextBox Grid.Column="1" Name="OrientationTxt" HorizontalAlignment="Left" Height="50" Width="250" Margin="0,10,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" />
         </Grid>
+        <Grid Grid.Row="3">
+            <Button Name="RecordingButton" Content="Start Recording" Height="50" Width="300" Margin="0,10,0,0"  IsEnabled="False" 
+                    Background="White" Click="RecordingButton_Click">
+            </Button>
+        </Grid>  
     </Grid>
 </Window>
