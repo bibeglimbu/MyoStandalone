@@ -127,7 +127,15 @@ namespace MyoTest.MyoManager
                 {
                     Debug.WriteLine("gripEmg" + gripEMG);
                     pingMyo();
-                    myConnector.sendFeedback("Read Grip the pen gently");
+                    try
+                    {
+                        myConnector.sendFeedback("Read Grip the pen gently");
+                    }
+                    catch 
+                    {
+                        Debug.WriteLine("feedback not sent");
+                    }
+                    
                     lastExecutionVibrate = DateTime.Now;
                     vibrateMyo = false;
                 }
@@ -146,7 +154,11 @@ namespace MyoTest.MyoManager
             if ((DateTime.Now - lastExecutionOrientation).TotalSeconds >= 0.5)
             {
                 //CalculateOrientation(e);
-                //SendData();
+                if (MainWindow.isRecordingData == true)
+                {
+                    SendData();
+                }
+                
                 lastExecutionOrientation = DateTime.Now;
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace MyoTest
@@ -87,17 +88,18 @@ namespace MyoTest
 
         public void StartRecordingData()
         {
-
             if (isRecordingData == false)
             {
                 isRecordingData = true;
                 RecordingButton.Content = "Stop Recording";
+                RecordingButton.Background = new SolidColorBrush(Colors.Green);
 
             }
             else if (isRecordingData == true)
             {
                 isRecordingData = false;
                 RecordingButton.Content = "Start Recording";
+                RecordingButton.Background = new SolidColorBrush(Colors.White);
             }
             Debug.WriteLine("isRecordingData= " + isRecordingData);
         }
