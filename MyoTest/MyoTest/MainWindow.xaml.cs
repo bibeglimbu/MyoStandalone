@@ -27,6 +27,7 @@ namespace MyoTest
 
         private void MyConnector_stopRecordingEvent(object sender)
         {
+            myoManager.IsRecording = false;
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
                         () =>
                         {
@@ -36,6 +37,7 @@ namespace MyoTest
 
         private void MyConnector_startRecordingEvent(object sender)
         {
+            myoManager.IsRecording = true;
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
                         () =>
                         {

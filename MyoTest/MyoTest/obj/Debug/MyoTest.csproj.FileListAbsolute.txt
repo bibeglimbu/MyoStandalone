@@ -51,7 +51,6 @@ E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csproj
 E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csproj.CopyComplete
 E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.exe
 E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.pdb
-E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csprojResolveAssemblyReference.cache
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\bin\Debug\MyoTest.exe.config
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\bin\Debug\MyoTest.exe
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\bin\Debug\MyoTest.pdb
@@ -73,3 +72,4 @@ C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\ob
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csproj.CopyComplete
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.exe
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.pdb
+E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csprojAssemblyReference.cache

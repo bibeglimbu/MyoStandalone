@@ -38,6 +38,16 @@ namespace MyoTest.MyoManager
         public static ConnectorHub.ConnectorHub myConnector;
         public ConnectorHub.FeedbackHub myFeedback;
         private bool vibrateMyo=true;
+        private bool _isRecording = false;
+        public bool IsRecording
+        {
+            get { return _isRecording; }
+            set
+            {
+                _isRecording = value;
+            }
+        }
+
 
         public MyoManager()
         {
@@ -111,55 +121,63 @@ namespace MyoTest.MyoManager
         #region MyoEvents
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
         {
-            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
+            if (_isRecording == true)
             {
-                //there is no need to send emg data
-                
-                CalculateGripPressure(e);
-                SendData();
-                lastExecutionEmg = DateTime.Now;
-            }
 
-            //vibrate only twice a sec
-            if (vibrateMyo == true)
-            {
-                if (gripEMG >= 4)
+                if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
                 {
-                    Debug.WriteLine("gripEmg" + gripEMG);
-                    pingMyo();
-                    try
-                    {
-                        myConnector.sendFeedback("Read Grip the pen gently");
-                    }
-                    catch 
-                    {
-                        Debug.WriteLine("feedback not sent");
-                    }
-                    
-                    lastExecutionVibrate = DateTime.Now;
-                    vibrateMyo = false;
+                    //there is no need to send emg data
+
+                    CalculateGripPressure(e);
+                    SendData();
+                    lastExecutionEmg = DateTime.Now;
                 }
-            }
-            if ((DateTime.Now - lastExecutionVibrate).TotalSeconds >= 0.5)
-            {
-                vibrateMyo = true;
+
+                //vibrate only twice a sec
+                if (vibrateMyo == true)
+                {
+                    if (gripEMG >= 4)
+                    {
+                        Debug.WriteLine("gripEmg" + gripEMG);
+                        pingMyo();
+                        try
+                        {
+                            myConnector.sendFeedback("Read Grip the pen gently");
+                        }
+                        catch
+                        {
+                            Debug.WriteLine("feedback not sent");
+                        }
+
+                        lastExecutionVibrate = DateTime.Now;
+                        vibrateMyo = false;
+                    }
+                }
+                if ((DateTime.Now - lastExecutionVibrate).TotalSeconds >= 0.5)
+                {
+                    vibrateMyo = true;
+
+                }
+
+                gripEMG = 0;
 
             }
-
-            gripEMG = 0;
         }
 
         private void Myo_OrientationAcquired(object sender, OrientationDataEventArgs e)
         {
-            if ((DateTime.Now - lastExecutionOrientation).TotalSeconds >= 0.5)
+            if (_isRecording == true)
             {
-                //CalculateOrientation(e);
-                if (MainWindow.isRecordingData == true)
+                if ((DateTime.Now - lastExecutionOrientation).TotalSeconds >= 0.5)
                 {
-                    SendData();
+                    //CalculateOrientation(e);
+                    if (MainWindow.isRecordingData == true)
+                    {
+                        SendData();
+                    }
+
+                    lastExecutionOrientation = DateTime.Now;
                 }
-                
-                lastExecutionOrientation = DateTime.Now;
             }
         }
         #endregion
@@ -268,7 +286,8 @@ namespace MyoTest.MyoManager
 
         private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
         {
-            Debug.WriteLine("Myo: Learninghublistener feedback received: " + feedback);
+            mWindow.UpdateDebug("Myo: Learninghublistener feedback received: " + feedback);
+            //Debug.WriteLine("Myo: Learninghublistener feedback received: " + feedback);
 
             ReadStream(feedback);
         }
