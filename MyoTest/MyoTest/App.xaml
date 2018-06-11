@@ -1,9 +1,9 @@
-﻿<Application x:Class="MyoTest.App"
+﻿<Application x:Class="MyoHub.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:MyoTest"
+             xmlns:local="clr-namespace:MyoHub"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <local:MyoViewModel x:Key="MyoViewModel" />
     </Application.Resources>
 </Application>

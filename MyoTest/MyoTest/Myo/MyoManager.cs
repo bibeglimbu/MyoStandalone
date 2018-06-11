@@ -1,69 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
-
 using MyoSharp.Communication;
 using MyoSharp.Device;
 using MyoSharp.Exceptions;
-using MyoSharp.Poses;
-using System.Net.Sockets;
-using System.Net;
-using System.Windows.Media.Media3D;
 
-namespace MyoTest.MyoManager
+namespace MyoHub.Myo
 {
     class MyoManager
     {
+        #region VAR
         IChannel channel;
         public static IHub hub;
-        MainWindow mWindow;
 
         private int gripEMG = 0;
-        private float orientationW=0;
-        private float orientationX=0;
-        private float orientationY=0;
-        private float orientationZ=0;
+        private float accelaration = 0.0f;
 
         private DateTime lastExecutionEmg;
         private DateTime lastExecutionVibrate;
         private DateTime lastExecutionOrientation;
-
+        
 
         int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        public static ConnectorHub.ConnectorHub myConnector;
-        public ConnectorHub.FeedbackHub myFeedback;
         private bool vibrateMyo=true;
-        private bool _isRecording = false;
-        public bool IsRecording
+
+        #endregion
+
+        #region events
+        public event EventHandler<GripPressureChangedEventArgs> GripPressureChanged;
+        protected virtual void OnGripPressureChanged(GripPressureChangedEventArgs g)
         {
-            get { return _isRecording; }
-            set
+            EventHandler<GripPressureChangedEventArgs> handler = GripPressureChanged;
+            if (handler != null)
             {
-                _isRecording = value;
+                handler(this, g);
             }
         }
+
+        public class GripPressureChangedEventArgs : EventArgs
+        {
+            public int gripPressure { get; set; }
+        }
+
+        public event EventHandler<AccelerometerChangedEventArgs> AccelerometerChanged;
+        protected virtual void OnAccelerometerChanged(AccelerometerChangedEventArgs a)
+        {
+            EventHandler<AccelerometerChangedEventArgs> handler = AccelerometerChanged;
+            if (handler != null)
+            {
+                handler(this, a);
+            }
+        }
+
+        public class AccelerometerChangedEventArgs : EventArgs
+        {
+            public float accelerometerMag { get; set; }
+        }
+        #endregion
 
 
         public MyoManager()
         {
-            myConnector = new ConnectorHub.ConnectorHub();
-            myConnector.init();
-            myFeedback = new ConnectorHub.FeedbackHub();
-            myFeedback.init();
-            myConnector.sendReady();
+            InitMyoManagerHub();
         }
-        
 
-        public void InitMyoManagerHub(MainWindow m)
+        public void InitMyoManagerHub()
         {
             lastExecutionEmg = DateTime.Now;
             lastExecutionVibrate = DateTime.Now;
-            this.mWindow = m;
             channel = Channel.Create( ChannelDriver.Create(ChannelBridge.Create(),
                 MyoErrorHandlerDriver.Create(MyoErrorHandlerBridge.Create())));
             hub = Hub.Create(channel);
@@ -74,7 +81,7 @@ namespace MyoTest.MyoManager
                 Debug.WriteLine("Myo {0} has connected!", e.Myo.Handle);
                 e.Myo.Vibrate(VibrationType.Short);
                 e.Myo.EmgDataAcquired += Myo_EmgDataAcquired;
-                e.Myo.OrientationDataAcquired += Myo_OrientationAcquired;
+                e.Myo.AccelerometerDataAcquired += Myo_AccelerometerDataAcquired;
                 e.Myo.SetEmgStreaming(true);
             };
 
@@ -86,52 +93,23 @@ namespace MyoTest.MyoManager
                 e.Myo.EmgDataAcquired -= Myo_EmgDataAcquired;
             };
 
-            try
-            {
-                setValueNames();
-                myFeedback.feedbackReceivedEvent += MyFeedback_feedbackReceivedEvent;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("MyoManager error at connecting the hub");
-            }
-
             // start listening for Myo data
             channel.StartListening();
 
         }
 
-        #region Send data
-        public void setValueNames()
-        {
-            List<string> names = new List<string>();
-            names.Add("orientationW");
-            names.Add("orientationX");
-            names.Add("orientationY");
-            names.Add("orientationZ");
-            for(int i=0;i<8;i++ )
-            {
-                names.Add("pod" + i);
-            }
-            myConnector.setValuesName(names);
-
-        }
-        #endregion
-
         #region MyoEvents
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
         {
-            if (_isRecording == true)
+            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
             {
-
-                if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
-                {
-                    //there is no need to send emg data
-
-                    CalculateGripPressure(e);
-                    SendData();
-                    lastExecutionEmg = DateTime.Now;
-                }
+                //there is no need to send emg data
+                CalculateGripPressure(e);
+                GripPressureChangedEventArgs args = new GripPressureChangedEventArgs();
+                args.gripPressure = gripEMG;
+                OnGripPressureChanged(args);
+                lastExecutionEmg = DateTime.Now;
+            }
 
                 //vibrate only twice a sec
                 if (vibrateMyo == true)
@@ -142,7 +120,7 @@ namespace MyoTest.MyoManager
                         pingMyo();
                         try
                         {
-                            myConnector.sendFeedback("Read Grip the pen gently");
+                            HubConnector.myConnector.sendFeedback("Read Grip the pen gently");
                         }
                         catch
                         {
@@ -159,56 +137,19 @@ namespace MyoTest.MyoManager
 
                 }
 
-                gripEMG = 0;
-
-            }
+            gripEMG = 0;
         }
-
-        private void Myo_OrientationAcquired(object sender, OrientationDataEventArgs e)
+        private void Myo_AccelerometerDataAcquired(object sender, AccelerometerDataEventArgs a)
         {
-            if (_isRecording == true)
-            {
-                if ((DateTime.Now - lastExecutionOrientation).TotalSeconds >= 0.5)
-                {
-                    //CalculateOrientation(e);
-                    if (MainWindow.isRecordingData == true)
-                    {
-                        SendData();
-                    }
-
-                    lastExecutionOrientation = DateTime.Now;
-                }
-            }
+            AccelerometerChangedEventArgs args = new AccelerometerChangedEventArgs();
+            args.accelerometerMag = a.Accelerometer.Magnitude();
+            OnAccelerometerChanged(args);
+            accelaration = a.Accelerometer.Magnitude();
+            //Debug.WriteLine(a.Accelerometer.Magnitude());
         }
+
         #endregion
 
-        /// <summary>
-        /// Method to broadcast packets of data
-        /// </summary>
-        /// <param name="pressure"></param>
-        public void SendData()
-        {
-            try
-            {
-                List<string> values = new List<string>();
-                values.Add(orientationW.ToString());
-                values.Add(orientationX.ToString());
-                values.Add(orientationY.ToString());
-                values.Add(orientationZ.ToString());
-                for(int i= 0; i < 8; i++)
-                {
-                    values.Add(storeEmgValue[i].ToString());
-                }
-                myConnector.storeFrame(values);
-                Debug.WriteLine("MyoManager.values"+values.Count);
-                Debug.WriteLine("MyoManager/ The size of value: " + values.Count);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.StackTrace);
-            }
-            
-    }
 
         /// <summary>
         /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
@@ -250,7 +191,6 @@ namespace MyoTest.MyoManager
 
             //add all value from emgTension and assign it to gripEmg
             Array.ForEach(emgTension, delegate (int i) { gripEMG += i; });
-            mWindow.UpdateGripPressure(gripEMG);
 
             try
             {
@@ -265,20 +205,6 @@ namespace MyoTest.MyoManager
             }
         }
 
-        /// <summary>
-        /// Method called upon receiving the even myodata received. It passes on the orientation data to the UpdateOrientation class in Mainwindow
-        /// </summary>
-        /// <param name="e"></param>
-        public void CalculateOrientation(OrientationDataEventArgs e)
-        {
-            orientationW = e.Orientation.W;
-            orientationX = e.Orientation.X;
-            orientationY = e.Orientation.Y;
-            orientationZ = e.Orientation.Z;
-            mWindow.UpdateOrientation(orientationW, orientationX, orientationY, orientationZ);
-        }
-
-
         public static void pingMyo()
         {
             hub.Myos.Last().Vibrate(VibrationType.Short);
@@ -286,7 +212,7 @@ namespace MyoTest.MyoManager
 
         private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
         {
-            mWindow.UpdateDebug("Myo: Learninghublistener feedback received: " + feedback);
+            //mWindow.UpdateDebug("Myo: Learninghublistener feedback received: " + feedback);
             //Debug.WriteLine("Myo: Learninghublistener feedback received: " + feedback);
 
             ReadStream(feedback);
@@ -296,8 +222,8 @@ namespace MyoTest.MyoManager
         {
             if (s.Contains("Myo"))
             {
-                MyoTest.MyoManager.MyoManager.pingMyo();
-                mWindow.UpdateDebug(s);
+                pingMyo();
+                //mWindow.UpdateDebug(s);
             }
 
         }

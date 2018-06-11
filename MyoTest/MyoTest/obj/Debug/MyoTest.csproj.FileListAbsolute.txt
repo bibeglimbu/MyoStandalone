@@ -73,3 +73,4 @@ C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\ob
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.pdb
 E:\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csprojAssemblyReference.cache
 C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\MyoTest.csprojAssemblyReference.cache
+C:\Users\bib_l\Documents\Programming Repository\MyoStandalone\MyoTest\MyoTest\obj\Debug\GeneratedInternalTypeHelper.g.cs

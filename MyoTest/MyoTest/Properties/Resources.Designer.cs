@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MyoTest.Properties
+namespace MyoHub.Properties
 {
 
 
