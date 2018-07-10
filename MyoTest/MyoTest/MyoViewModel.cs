@@ -33,18 +33,15 @@ namespace MyoHub
 
         MyoManager myoManager = new MyoManager();
 
-        private string _debugText = "";
+        private string _debugText = " ";
         public string DebugText
         {
             get { return _debugText; }
             set
             {
-                if (value != this._debugText)
-                {
                     _debugText = value;
                     NotifyPropertyChanged();
                     //UpdateDebug(_debugText);
-                }
             }
         }
 
@@ -149,7 +146,6 @@ namespace MyoHub
             }
         }
 
-
         private int _gripPressure = 0;
         public int GripPressure
         {
@@ -213,19 +209,6 @@ namespace MyoHub
         ConnectorHub.ConnectorHub myConnector;
         ConnectorHub.FeedbackHub myFeedback;
 
-        DispatcherTimer Dtimer = new DispatcherTimer();
-
-        //private bool _isRecording = false;
-        //public bool IsRecording
-        //{
-        //    get { return _isRecording; }
-        //    set
-        //    {
-        //        _isRecording = value;
-        //        NotifyPropertyChanged();
-        //    }
-        //}
-
         #endregion
 
         public MyoViewModel()
@@ -244,36 +227,29 @@ namespace MyoHub
             myoManager.GyroscopeChanged += UpdateGyroscope;
             myoManager.OrientationChanged += UpdateOrientation;
 
-            Dtimer.Interval = new TimeSpan(100);
-            Dtimer.Tick += Dtimer_Tick;
-            Dtimer.Start();
+            //Dtimer.Interval = new TimeSpan(100);
+            //Dtimer.Tick += Dtimer_Tick;
+            //Dtimer.Start();
+            setValueNames();
 
-            try
-            {
-                setValueNames();
-            }
-            catch (Exception e)
-            {
-                DebugText = "MyoManager error at connecting the hub";
-            }
         }
 
-        private void Dtimer_Tick(object sender, EventArgs e)
-        {
-            try
-            {
-                if (Globals.IsRecording == true)
-                {
-                    SendData();
-                }
+        //private void Dtimer_Tick(object sender, EventArgs e)
+        //{
+        //    try
+        //    {
+        //        //if (Globals.IsRecording == true)
+        //        //{
+        //        //    SendData();
+        //        //}
                 
-            }
-            catch
-            {
-                DebugText = "Failed to send data";
-            }
+        //    }
+        //    catch
+        //    {
+        //        DebugText = "Failed to send data";
+        //    }
            
-        }
+        //}
 
         private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
         {
@@ -299,6 +275,10 @@ namespace MyoHub
             OrientationX = o.OrientationX;
             OrientationY = o.OrientationY;
             OrientationZ = o.OrientationZ;
+            if (Globals.IsRecording == true)
+            {
+                SendData();
+            }
         }
 
         private void UpdateGyroscope(object sender, MyoManager.GyroscopeChangedEventArgs e)
@@ -306,16 +286,17 @@ namespace MyoHub
             GyroscopeX = e.gyroscopeX;
             GyroscopeY = e.gyroscopeY;
             GyroscopeZ = e.gyroscopeZ;
+            if (Globals.IsRecording == true)
+            {
+                SendData();
+            }
         }
 
         private void UpdateGripPressure(object sender, MyoManager.GripPressureChangedEventArgs grip)
         {
-            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(
-            () =>
+            GripPressure = grip.gripPressure;
+            Task.Run(() =>
             {
-                GripPressure = grip.gripPressure;
-                //vibrate only twice a sec
-
                 if (GripPressure >= 4)
                 {
                     try
@@ -333,7 +314,11 @@ namespace MyoHub
                     }
 
                 }
-            }));
+            });
+            if (Globals.IsRecording == true)
+            {
+                SendData();
+            }
         }
 
         private void UpdateAccelerometer(object sender, MyoManager.AccelerometerChangedEventArgs a)
@@ -341,7 +326,10 @@ namespace MyoHub
             AccelerometerX = a.accelerometerX;
             AccelerometerY = a.accelerometerY;
             AccelerometerZ = a.accelerometerZ;
-
+            if (Globals.IsRecording == true)
+            {
+                SendData();
+            }
         }
 
         private void MyConnector_stopRecordingEvent(object sender)
@@ -408,7 +396,10 @@ namespace MyoHub
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.StackTrace);
+                if (DebugText != ex.ToString())
+                {
+                    DebugText = ex.ToString();
+                }
             }
 
         }
@@ -433,7 +424,11 @@ namespace MyoHub
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.StackTrace);
+                //Debug.WriteLine(ex.StackTrace);
+                if (DebugText != ex.ToString())
+                {
+                    DebugText = ex.ToString();
+                }
             }
 
         }
