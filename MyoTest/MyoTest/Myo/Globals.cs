@@ -17,5 +17,25 @@ namespace MyoHub.Myo
                 _isRecording = value;
             }
         }
+
+        private static bool _vibrateMyo = true;
+        public static bool VibrateMyo
+        {
+            get { return _vibrateMyo; }
+            set
+            {
+                _vibrateMyo = value;
+            }
+        }
+
+        private static DateTime _lastExecution = DateTime.Now;
+        public static DateTime LastExecution
+        {
+            get { return _lastExecution; }
+            set
+            {
+                _lastExecution = value;
+            }
+        }
     }
 }

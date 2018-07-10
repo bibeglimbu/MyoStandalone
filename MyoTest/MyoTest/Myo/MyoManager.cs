@@ -15,28 +15,20 @@ namespace MyoHub.Myo
         public static IHub hub;
 
         private int gripEMG = 0;
-        private float accelaration = 0.0f;
-
-        private DateTime lastExecutionEmg;
-        private DateTime lastExecutionVibrate;
-        private DateTime lastExecutionOrientation;
-        
 
         int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-        private bool vibrateMyo=true;
 
         #endregion
 
         #region events
         public event EventHandler<GripPressureChangedEventArgs> GripPressureChanged;
-        protected virtual void OnGripPressureChanged(GripPressureChangedEventArgs g)
+        protected virtual void OnGripPressureChanged(GripPressureChangedEventArgs gripEvent)
         {
             EventHandler<GripPressureChangedEventArgs> handler = GripPressureChanged;
             if (handler != null)
             {
-                handler(this, g);
+                handler(this, gripEvent);
             }
         }
 
@@ -46,18 +38,56 @@ namespace MyoHub.Myo
         }
 
         public event EventHandler<AccelerometerChangedEventArgs> AccelerometerChanged;
-        protected virtual void OnAccelerometerChanged(AccelerometerChangedEventArgs a)
+        protected virtual void OnAccelerometerChanged(AccelerometerChangedEventArgs accEvent)
         {
             EventHandler<AccelerometerChangedEventArgs> handler = AccelerometerChanged;
             if (handler != null)
             {
-                handler(this, a);
+                handler(this, accEvent);
             }
         }
 
         public class AccelerometerChangedEventArgs : EventArgs
         {
             public float accelerometerMag { get; set; }
+            public float accelerometerX { get; set; }
+            public float accelerometerY { get; set; }
+            public float accelerometerZ { get; set; }
+        }
+
+        public event EventHandler<GyroscopeChangedEventArgs> GyroscopeChanged;
+        protected virtual void OnGyroscopeChanged(GyroscopeChangedEventArgs gyroEvent)
+        {
+            EventHandler<GyroscopeChangedEventArgs> handler = GyroscopeChanged;
+            if (handler != null)
+            {
+                handler(this, gyroEvent);
+            }
+        }
+
+        public class GyroscopeChangedEventArgs : EventArgs
+        {
+            public float gyroscopeX { get; set; }
+            public float gyroscopeY { get; set; }
+            public float gyroscopeZ { get; set; }
+        }
+
+        public event EventHandler<OrientationChangedEventArgs> OrientationChanged;
+        protected virtual void OnOrientationChanged(OrientationChangedEventArgs OrientationEvent)
+        {
+            EventHandler<OrientationChangedEventArgs> handler = OrientationChanged;
+            if (handler != null)
+            {
+                handler(this, OrientationEvent);
+            }
+        }
+
+        public class OrientationChangedEventArgs : EventArgs
+        {
+            public float OrientationW { get; set; }
+            public float OrientationX { get; set; }
+            public float OrientationY { get; set; }
+            public float OrientationZ { get; set; }
         }
         #endregion
 
@@ -69,8 +99,7 @@ namespace MyoHub.Myo
 
         public void InitMyoManagerHub()
         {
-            lastExecutionEmg = DateTime.Now;
-            lastExecutionVibrate = DateTime.Now;
+            Globals.LastExecution = DateTime.Now;
             channel = Channel.Create( ChannelDriver.Create(ChannelBridge.Create(),
                 MyoErrorHandlerDriver.Create(MyoErrorHandlerBridge.Create())));
             hub = Hub.Create(channel);
@@ -82,6 +111,8 @@ namespace MyoHub.Myo
                 e.Myo.Vibrate(VibrationType.Short);
                 e.Myo.EmgDataAcquired += Myo_EmgDataAcquired;
                 e.Myo.AccelerometerDataAcquired += Myo_AccelerometerDataAcquired;
+                e.Myo.GyroscopeDataAcquired += Myo_GyroscopeDataAcquired;
+                e.Myo.OrientationDataAcquired += Myo_OrientationDataAcquired;
                 e.Myo.SetEmgStreaming(true);
             };
 
@@ -91,61 +122,55 @@ namespace MyoHub.Myo
                 Debug.WriteLine("Oh no! It looks like {0} arm Myo has disconnected!", e.Myo.Arm);
                 e.Myo.SetEmgStreaming(false);
                 e.Myo.EmgDataAcquired -= Myo_EmgDataAcquired;
+                e.Myo.AccelerometerDataAcquired -= Myo_AccelerometerDataAcquired;
+                e.Myo.GyroscopeDataAcquired -= Myo_GyroscopeDataAcquired;
+                e.Myo.OrientationDataAcquired -= Myo_OrientationDataAcquired;
             };
 
             // start listening for Myo data
             channel.StartListening();
-
+            
         }
 
+
         #region MyoEvents
+
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
         {
-            if ((DateTime.Now - lastExecutionEmg).TotalSeconds >= 0.5)
-            {
-                //there is no need to send emg data
                 CalculateGripPressure(e);
                 GripPressureChangedEventArgs args = new GripPressureChangedEventArgs();
                 args.gripPressure = gripEMG;
                 OnGripPressureChanged(args);
-                lastExecutionEmg = DateTime.Now;
-            }
+                gripEMG = 0;
+        }
 
-                //vibrate only twice a sec
-                if (vibrateMyo == true)
-                {
-                    if (gripEMG >= 4)
-                    {
-                        Debug.WriteLine("gripEmg" + gripEMG);
-                        pingMyo();
-                        try
-                        {
-                            HubConnector.myConnector.sendFeedback("Read Grip the pen gently");
-                        }
-                        catch
-                        {
-                            Debug.WriteLine("feedback not sent");
-                        }
+        private void Myo_OrientationDataAcquired(object sender, OrientationDataEventArgs e)
+        {
+            OrientationChangedEventArgs args = new OrientationChangedEventArgs();
+            args.OrientationW = e.Orientation.W;
+            args.OrientationX = e.Orientation.X;
+            args.OrientationY = e.Orientation.Y;
+            args.OrientationZ = e.Orientation.Z;
+            OnOrientationChanged(args);
+        }
 
-                        lastExecutionVibrate = DateTime.Now;
-                        vibrateMyo = false;
-                    }
-                }
-                if ((DateTime.Now - lastExecutionVibrate).TotalSeconds >= 0.5)
-                {
-                    vibrateMyo = true;
-
-                }
-
-            gripEMG = 0;
+        private void Myo_GyroscopeDataAcquired(object sender, GyroscopeDataEventArgs e)
+        {
+            //there is no need to send emg data
+            GyroscopeChangedEventArgs args = new GyroscopeChangedEventArgs();
+            args.gyroscopeX = e.Gyroscope.X;
+            args.gyroscopeY = e.Gyroscope.Y;
+            args.gyroscopeZ = e.Gyroscope.Z;
+            OnGyroscopeChanged(args);
         }
         private void Myo_AccelerometerDataAcquired(object sender, AccelerometerDataEventArgs a)
         {
-            AccelerometerChangedEventArgs args = new AccelerometerChangedEventArgs();
-            args.accelerometerMag = a.Accelerometer.Magnitude();
-            OnAccelerometerChanged(args);
-            accelaration = a.Accelerometer.Magnitude();
-            //Debug.WriteLine(a.Accelerometer.Magnitude());
+                AccelerometerChangedEventArgs args = new AccelerometerChangedEventArgs();
+                args.accelerometerMag = a.Accelerometer.Magnitude();
+                args.accelerometerX = a.Accelerometer.X;
+                args.accelerometerY = a.Accelerometer.Y;
+                args.accelerometerZ = a.Accelerometer.Z;
+                OnAccelerometerChanged(args);
         }
 
         #endregion
@@ -207,25 +232,14 @@ namespace MyoHub.Myo
 
         public static void pingMyo()
         {
-            hub.Myos.Last().Vibrate(VibrationType.Short);
-        }
-
-        private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
-        {
-            //mWindow.UpdateDebug("Myo: Learninghublistener feedback received: " + feedback);
-            //Debug.WriteLine("Myo: Learninghublistener feedback received: " + feedback);
-
-            ReadStream(feedback);
-        }
-
-        private void ReadStream(String s)
-        {
-            if (s.Contains("Myo"))
+            if ((DateTime.Now - Globals.LastExecution).TotalSeconds > 1)
             {
-                pingMyo();
-                //mWindow.UpdateDebug(s);
+                hub.Myos.Last().Vibrate(VibrationType.Short);
+                Globals.LastExecution = DateTime.Now;
             }
-
+            
         }
+
+
     }
 }

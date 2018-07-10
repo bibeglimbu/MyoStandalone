@@ -5,13 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         DataContext="{StaticResource MyoViewModel}"
         mc:Ignorable="d"
-        Title="MyoConnectorHub" Height="350" Width="400">
+        Title="MyoConnectorHub" Height="650" Width="400">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="1.25*"/>
+            <RowDefinition Height="0.25*"/>
             <RowDefinition Height="1*"/>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="0.25*"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
@@ -19,28 +18,54 @@
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Margin="0,25,0,0" Text="Debug"/>
-            <TextBox Grid.Column="1"  Name="DebugTxt" HorizontalAlignment="Left" Height="60" Width="250" Margin="0,25,0,0" TextWrapping="Wrap" Text="DebugText" VerticalAlignment="Top" />
+            <TextBox Grid.Column="1"  Name="DebugTxt" HorizontalAlignment="Left" Height="75" Width="250" Margin="2.5,25,2.5,2.5" TextWrapping="Wrap" Text="DebugText" VerticalAlignment="Top" />
         </Grid>
-        <Grid Grid.Row="1">
+    <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width=".5*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Grip Pressure"/>
-            <TextBox Grid.Column="1" Name="GripTxt" Text="{Binding GripPressure}"
-                     HorizontalAlignment="Left" Height="60" Width="250" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" />
-        </Grid>
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width=".5*"/>
-                <ColumnDefinition Width="1*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Acceleration"/>
-            <TextBox Grid.Column="1" Name="AccelerationTxt" Text="{Binding Acceleration}"
-                     HorizontalAlignment="Left" Height="60" Width="250" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" />
-        </Grid>
-        <Grid Grid.Row="3">
-            <Button Name="RecordingButton" Content="{Binding ButtonText}" Height="50" Width="300" Margin="0,10,0,0"  
+            <StackPanel Grid.Column="0">
+                <TextBlock Grid.Column="0" Text="OrientationW" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="OrientationX" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="OrientationY" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="OrientationZ" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="AcclerometerX" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="AcclerometerY" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="AcclerometerZ" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="GyroscopeX" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="GyroscopeY" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="GyroscopeZ" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+                <TextBlock Grid.Column="0" Text="Grip Pressure" Height="25" Width="200" Margin="2.5,2.5,2.5,2.5"/>
+
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBox Grid.Column="1" Name="OrientationW" Text="{Binding OrientationW}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="OrientationX" Text="{Binding OrientationX}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="OrientationY" Text="{Binding OrientationY}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="OrientationZ" Text="{Binding OrientationZ}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="AcclerometerX" Text="{Binding AccelerometerX}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="AcclerometerY" Text="{Binding AccelerometerY}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="AcclerometerZ" Text="{Binding AccelerometerZ}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="GyroscopeX" Text="{Binding GyroscopeX}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="GyroscopeY" Text="{Binding GyroscopeY}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="GyroscopeZ" Text="{Binding GyroscopeZ}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+                <TextBox Grid.Column="1" Name="GripPressure" Text="{Binding GripPressure}"
+                     HorizontalAlignment="Left" Height="25" Width="250" Margin="2.5,2.5,2.5,2.5" TextWrapping="Wrap" VerticalAlignment="Top" />
+            </StackPanel>
+    </Grid>
+    <Grid Grid.Row="2">
+            <Button Name="RecordingButton" Content="{Binding ButtonText}" Height="50" Width="300" Margin="2.5,2.5,2.5,2.5"  
                     Background="{Binding ButtonBrush}" Command="{Binding Path=ButtonClicked}">
             </Button>
         </Grid>  

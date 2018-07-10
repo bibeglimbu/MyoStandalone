@@ -79,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Myo\Globals.cs" />
-    <Compile Include="Myo\HubConnector.cs" />
     <Compile Include="Myo\MyoManager.cs" />
     <Compile Include="MyoViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
