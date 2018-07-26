@@ -209,6 +209,9 @@ namespace MyoHub
         ConnectorHub.ConnectorHub myConnector;
         ConnectorHub.FeedbackHub myFeedback;
 
+        private double EMGPod_0, EMGPod_1, EMGPod_2, EMGPod_3, EMGPod_4, EMGPod_5, EMGPod_6, EMGPod_7;
+
+
         #endregion
 
         public MyoViewModel()
@@ -226,6 +229,7 @@ namespace MyoHub
             myoManager.AccelerometerChanged += UpdateAccelerometer;
             myoManager.GyroscopeChanged += UpdateGyroscope;
             myoManager.OrientationChanged += UpdateOrientation;
+            myoManager.EMGChanged += UpdateEMG;
 
             //Dtimer.Interval = new TimeSpan(100);
             //Dtimer.Tick += Dtimer_Tick;
@@ -233,6 +237,7 @@ namespace MyoHub
             setValueNames();
 
         }
+
 
         //private void Dtimer_Tick(object sender, EventArgs e)
         //{
@@ -242,13 +247,13 @@ namespace MyoHub
         //        //{
         //        //    SendData();
         //        //}
-                
+
         //    }
         //    catch
         //    {
         //        DebugText = "Failed to send data";
         //    }
-           
+
         //}
 
         private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
@@ -351,6 +356,23 @@ namespace MyoHub
                             this.StartRecordingData();
                         }));
         }
+
+        private void UpdateEMG(object sender, MyoManager.EMGChangedEventArgs e)
+        {
+            EMGPod_0 = e.EMGPod_0;
+            EMGPod_1 = e.EMGPod_1;
+            EMGPod_2 = e.EMGPod_2;
+            EMGPod_3 = e.EMGPod_3;
+            EMGPod_4 = e.EMGPod_4;
+            EMGPod_5 = e.EMGPod_5;
+            EMGPod_6 = e.EMGPod_6;
+            EMGPod_7 = e.EMGPod_7;
+            if (Globals.IsRecording == true)
+            {
+                SendData();
+            }
+        }
+
         #endregion
 
         #region UI
@@ -392,6 +414,15 @@ namespace MyoHub
                 names.Add("GyroscopeY");
                 names.Add("GyroscopeZ");
                 names.Add("GripPressure");
+                names.Add("EMGPod_0");
+                names.Add("EMGPod_1");
+                names.Add("EMGPod_2");
+                names.Add("EMGPod_3");
+                names.Add("EMGPod_4");
+                names.Add("EMGPod_5");
+                names.Add("EMGPod_6");
+                names.Add("EMGPod_7");
+
                 myConnector.setValuesName(names);
             }
             catch (Exception ex)
@@ -420,6 +451,14 @@ namespace MyoHub
                 values.Add(GyroscopeY.ToString());
                 values.Add(GyroscopeZ.ToString());
                 values.Add(GripPressure.ToString());
+                values.Add(EMGPod_0.ToString());
+                values.Add(EMGPod_1.ToString());
+                values.Add(EMGPod_2.ToString());
+                values.Add(EMGPod_3.ToString());
+                values.Add(EMGPod_4.ToString());
+                values.Add(EMGPod_5.ToString());
+                values.Add(EMGPod_6.ToString());
+                values.Add(EMGPod_7.ToString());
                 myConnector.storeFrame(values);
             }
             catch (Exception ex)

@@ -89,6 +89,21 @@ namespace MyoHub.Myo
             public float OrientationY { get; set; }
             public float OrientationZ { get; set; }
         }
+
+        public event EventHandler<EMGChangedEventArgs> EMGChanged;
+        protected virtual void OnEMGChanged(EMGChangedEventArgs EMGEvent)
+        {
+            EventHandler<EMGChangedEventArgs> handler = EMGChanged;
+            if (handler != null)
+            {
+                handler(this, EMGEvent);
+            }
+        }
+
+        public class EMGChangedEventArgs : EventArgs
+        {
+            public double EMGPod_0, EMGPod_1, EMGPod_2, EMGPod_3, EMGPod_4, EMGPod_5, EMGPod_6, EMGPod_7;
+        }
         #endregion
 
 
@@ -137,7 +152,18 @@ namespace MyoHub.Myo
 
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
         {
-                CalculateGripPressure(e);
+            EMGChangedEventArgs emgArgs = new EMGChangedEventArgs();
+            emgArgs.EMGPod_0 = e.Myo.EmgData.GetDataForSensor(0);
+            emgArgs.EMGPod_1 = e.Myo.EmgData.GetDataForSensor(1);
+            emgArgs.EMGPod_2 = e.Myo.EmgData.GetDataForSensor(2);
+            emgArgs.EMGPod_3 = e.Myo.EmgData.GetDataForSensor(3);
+            emgArgs.EMGPod_4 = e.Myo.EmgData.GetDataForSensor(4);
+            emgArgs.EMGPod_5 = e.Myo.EmgData.GetDataForSensor(5);
+            emgArgs.EMGPod_6 = e.Myo.EmgData.GetDataForSensor(6);
+            emgArgs.EMGPod_7= e.Myo.EmgData.GetDataForSensor(7);
+            OnEMGChanged(emgArgs);
+
+            CalculateGripPressure(e);
                 GripPressureChangedEventArgs args = new GripPressureChangedEventArgs();
                 args.gripPressure = gripEMG;
                 OnGripPressureChanged(args);
