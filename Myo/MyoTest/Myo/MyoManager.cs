@@ -5,6 +5,7 @@ using System.Diagnostics;
 using MyoSharp.Communication;
 using MyoSharp.Device;
 using MyoSharp.Exceptions;
+using System.Threading.Tasks;
 
 namespace MyoHub.Myo
 {
@@ -14,14 +15,12 @@ namespace MyoHub.Myo
         IChannel channel;
         public static IHub hub;
 
-        private int gripEMG = 0;
-
-        int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-        int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-
         #endregion
 
         #region events
+        /// <summary>
+        /// Event raised when the grip pressure has changed over the last iteration
+        /// </summary>
         public event EventHandler<GripPressureChangedEventArgs> GripPressureChanged;
         protected virtual void OnGripPressureChanged(GripPressureChangedEventArgs gripEvent)
         {
@@ -106,12 +105,17 @@ namespace MyoHub.Myo
         }
         #endregion
 
-
+        /// <summary>
+        /// Consturctor for <see cref="MyoManager"/>
+        /// </summary>
         public MyoManager()
         {
             InitMyoManagerHub();
         }
 
+        /// <summary>
+        /// Initializer Myo armband
+        /// </summary>
         public void InitMyoManagerHub()
         {
             Globals.LastExecution = DateTime.Now;
@@ -147,7 +151,6 @@ namespace MyoHub.Myo
             
         }
 
-
         #region MyoEvents
 
         private void Myo_EmgDataAcquired(object sender, EmgDataEventArgs e)
@@ -161,13 +164,16 @@ namespace MyoHub.Myo
             emgArgs.EMGPod_5 = e.Myo.EmgData.GetDataForSensor(5);
             emgArgs.EMGPod_6 = e.Myo.EmgData.GetDataForSensor(6);
             emgArgs.EMGPod_7= e.Myo.EmgData.GetDataForSensor(7);
+            //raise the event for receiving EMG data
             OnEMGChanged(emgArgs);
-
-            CalculateGripPressure(e);
-                GripPressureChangedEventArgs args = new GripPressureChangedEventArgs();
-                args.gripPressure = gripEMG;
-                OnGripPressureChanged(args);
-                gripEMG = 0;
+            //calculate Grip Pressure
+            CalculateGripPressureAsync(e);
+            GripPressureChangedEventArgs args = new GripPressureChangedEventArgs();
+            args.gripPressure = gripEMG;
+            //raise event when grip pressure is changed
+            OnGripPressureChanged(args);
+            //set emg data back to 0
+            gripEMG = 0;
         }
 
         private void Myo_OrientationDataAcquired(object sender, OrientationDataEventArgs e)
@@ -201,13 +207,29 @@ namespace MyoHub.Myo
 
         #endregion
 
+        private async void CalculateGripPressureAsync(EmgDataEventArgs e)
+        {
+            await Task.Run(() => CalculateGripPressure(e));
+        }
 
+        /// <summary>
+        /// total grip pressure calculated 
+        /// </summary>
+        private int gripEMG = 0;
+        /// <summary>
+        /// holds the previous state of EMG pods
+        /// </summary>
+        int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        /// <summary>
+        /// Stores the state of EMG pods
+        /// </summary>
+        int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         /// <summary>
         /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
         /// else assign 0. It means that much variation(100 to -100) was observed propotional to higher tension in muscle. 
         /// </summary>
         /// <param name="e"></param>
-        void CalculateGripPressure(EmgDataEventArgs e)
+        private void CalculateGripPressure(EmgDataEventArgs e)
         {
             //Threshold to determind the fluctuation
             int emgThreshold = 15;
@@ -255,6 +277,7 @@ namespace MyoHub.Myo
                 Debug.WriteLine("No emg value");
             }
         }
+
 
         public static void pingMyo()
         {

@@ -211,7 +211,6 @@ namespace MyoHub
 
         private double EMGPod_0, EMGPod_1, EMGPod_2, EMGPod_3, EMGPod_4, EMGPod_5, EMGPod_6, EMGPod_7;
 
-
         #endregion
 
         public MyoViewModel()
@@ -231,34 +230,33 @@ namespace MyoHub
             myoManager.OrientationChanged += UpdateOrientation;
             myoManager.EMGChanged += UpdateEMG;
 
-            //Dtimer.Interval = new TimeSpan(100);
-            //Dtimer.Tick += Dtimer_Tick;
-            //Dtimer.Start();
             setValueNames();
 
         }
 
-
-        //private void Dtimer_Tick(object sender, EventArgs e)
-        //{
-        //    try
-        //    {
-        //        //if (Globals.IsRecording == true)
-        //        //{
-        //        //    SendData();
-        //        //}
-
-        //    }
-        //    catch
-        //    {
-        //        DebugText = "Failed to send data";
-        //    }
-
-        //}
-
         private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
         {
             ReadStream(feedback);
+        }
+
+        private void MyConnector_stopRecordingEvent(object sender)
+        {
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            Globals.IsRecording = true;
+                            this.StartRecordingData();
+                        }));
+        }
+
+        private void MyConnector_startRecordingEvent(object sender)
+        {
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
+                        () =>
+                        {
+                            Globals.IsRecording = false;
+                            this.StartRecordingData();
+                        }));
         }
 
         private void ReadStream(String s)
@@ -271,7 +269,6 @@ namespace MyoHub
 
         }
 
-
         #region Events handlers
 
         private void UpdateOrientation(object sender, MyoManager.OrientationChangedEventArgs o)
@@ -282,7 +279,7 @@ namespace MyoHub
             OrientationZ = o.OrientationZ;
             if (Globals.IsRecording == true)
             {
-                SendData();
+                SendDataAsync();
             }
         }
 
@@ -293,7 +290,34 @@ namespace MyoHub
             GyroscopeZ = e.gyroscopeZ;
             if (Globals.IsRecording == true)
             {
-                SendData();
+                SendDataAsync();
+            }
+        }
+
+        private void UpdateAccelerometer(object sender, MyoManager.AccelerometerChangedEventArgs a)
+        {
+            AccelerometerX = a.accelerometerX;
+            AccelerometerY = a.accelerometerY;
+            AccelerometerZ = a.accelerometerZ;
+            if (Globals.IsRecording == true)
+            {
+                SendDataAsync();
+            }
+        }
+
+        private void UpdateEMG(object sender, MyoManager.EMGChangedEventArgs e)
+        {
+            EMGPod_0 = e.EMGPod_0;
+            EMGPod_1 = e.EMGPod_1;
+            EMGPod_2 = e.EMGPod_2;
+            EMGPod_3 = e.EMGPod_3;
+            EMGPod_4 = e.EMGPod_4;
+            EMGPod_5 = e.EMGPod_5;
+            EMGPod_6 = e.EMGPod_6;
+            EMGPod_7 = e.EMGPod_7;
+            if (Globals.IsRecording == true)
+            {
+                SendDataAsync ();
             }
         }
 
@@ -322,54 +346,7 @@ namespace MyoHub
             });
             if (Globals.IsRecording == true)
             {
-                SendData();
-            }
-        }
-
-        private void UpdateAccelerometer(object sender, MyoManager.AccelerometerChangedEventArgs a)
-        {
-            AccelerometerX = a.accelerometerX;
-            AccelerometerY = a.accelerometerY;
-            AccelerometerZ = a.accelerometerZ;
-            if (Globals.IsRecording == true)
-            {
-                SendData();
-            }
-        }
-
-        private void MyConnector_stopRecordingEvent(object sender)
-        {
-            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
-                        () =>
-                        {
-                            Globals.IsRecording = true;
-                            this.StartRecordingData();
-                        }));
-        }
-
-        private void MyConnector_startRecordingEvent(object sender)
-        {
-            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
-                        () =>
-                        {
-                            Globals.IsRecording = false;
-                            this.StartRecordingData();
-                        }));
-        }
-
-        private void UpdateEMG(object sender, MyoManager.EMGChangedEventArgs e)
-        {
-            EMGPod_0 = e.EMGPod_0;
-            EMGPod_1 = e.EMGPod_1;
-            EMGPod_2 = e.EMGPod_2;
-            EMGPod_3 = e.EMGPod_3;
-            EMGPod_4 = e.EMGPod_4;
-            EMGPod_5 = e.EMGPod_5;
-            EMGPod_6 = e.EMGPod_6;
-            EMGPod_7 = e.EMGPod_7;
-            if (Globals.IsRecording == true)
-            {
-                SendData();
+                SendDataAsync();
             }
         }
 
@@ -398,43 +375,55 @@ namespace MyoHub
         #endregion
 
         #region Send data
-        private void setValueNames()
+        private async void setValueNames()
         {
-            try
+            await Task.Run(() =>
             {
-                List<string> names = new List<string>();
-                names.Add("OrientationW");
-                names.Add("OrientationX");
-                names.Add("OrientationY");
-                names.Add("OrientationZ");
-                names.Add("AccelerometerX");
-                names.Add("AccelerometerY");
-                names.Add("AccelerometerZ");
-                names.Add("GyroscopeX");
-                names.Add("GyroscopeY");
-                names.Add("GyroscopeZ");
-                names.Add("GripPressure");
-                names.Add("EMGPod_0");
-                names.Add("EMGPod_1");
-                names.Add("EMGPod_2");
-                names.Add("EMGPod_3");
-                names.Add("EMGPod_4");
-                names.Add("EMGPod_5");
-                names.Add("EMGPod_6");
-                names.Add("EMGPod_7");
-
-                myConnector.setValuesName(names);
-            }
-            catch (Exception ex)
-            {
-                if (DebugText != ex.ToString())
+                try
                 {
-                    DebugText = ex.ToString();
+                    List<string> names = new List<string>();
+                    names.Add("OrientationW");
+                    names.Add("OrientationX");
+                    names.Add("OrientationY");
+                    names.Add("OrientationZ");
+                    names.Add("AccelerometerX");
+                    names.Add("AccelerometerY");
+                    names.Add("AccelerometerZ");
+                    names.Add("GyroscopeX");
+                    names.Add("GyroscopeY");
+                    names.Add("GyroscopeZ");
+                    names.Add("GripPressure");
+                    names.Add("EMGPod_0");
+                    names.Add("EMGPod_1");
+                    names.Add("EMGPod_2");
+                    names.Add("EMGPod_3");
+                    names.Add("EMGPod_4");
+                    names.Add("EMGPod_5");
+                    names.Add("EMGPod_6");
+                    names.Add("EMGPod_7");
+
+                    myConnector.setValuesName(names);
                 }
-            }
+                catch (Exception ex)
+                {
+                    if (DebugText != ex.ToString())
+                    {
+                        DebugText = ex.ToString();
+                    }
+                }
+            });
 
         }
-
+        /// <summary>
+        /// method for sending data Async
+        /// </summary>
+        public async void SendDataAsync()
+        {
+            await Task.Run(() => SendData());
+        }
+        /// <summary>
+        /// Method to send the data to the learning hub
+        /// </summary>
         private void SendData()
         {
             try
@@ -470,6 +459,75 @@ namespace MyoHub
                 }
             }
 
+        }
+        #endregion
+
+        #region filterData
+        /// <summary>
+        /// This function returns the data filtered. Converted to C# 2 July 2014.
+        /// Original source written in VBA for Microsoft Excel, 2000 by Sam Van
+        /// Wassenbergh (University of Antwerp), 6 june 2007.
+        /// </summary>
+        /// <param name="indata"></param>
+        /// <param name="deltaTimeinsec"></param>
+        /// <param name="CutOff"></param>
+        /// <returns></returns>
+        public static double[] Butterworth(double[] indata, double deltaTimeinsec, double CutOff)
+        {
+            if (indata == null) return null;
+            if (CutOff == 0) return indata;
+
+            double Samplingrate = 1 / deltaTimeinsec;
+            long dF2 = indata.Length - 1;        // The data range is set with dF2
+            double[] Dat2 = new double[dF2 + 4]; // Array with 4 extra points front and back
+            double[] data = indata; // Ptr., changes passed data
+
+            // Copy indata to Dat2
+            for (long r = 0; r < dF2; r++)
+            {
+                Dat2[2 + r] = indata[r];
+            }
+            Dat2[1] = Dat2[0] = indata[0];
+            Dat2[dF2 + 3] = Dat2[dF2 + 2] = indata[dF2];
+
+            const double pi = 3.14159265358979;
+            double wc = Math.Tan(CutOff * pi / Samplingrate);
+            double k1 = 1.414213562 * wc; // Sqrt(2) * wc
+            double k2 = wc * wc;
+            double a = k2 / (1 + k1 + k2);
+            double b = 2 * a;
+            double c = a;
+            double k3 = b / k2;
+            double d = -2 * a + k3;
+            double e = 1 - (2 * a) - k3;
+
+            // RECURSIVE TRIGGERS - ENABLE filter is performed (first, last points constant)
+            double[] DatYt = new double[dF2 + 4];
+            DatYt[1] = DatYt[0] = indata[0];
+            for (long s = 2; s < dF2 + 2; s++)
+            {
+                DatYt[s] = a * Dat2[s] + b * Dat2[s - 1] + c * Dat2[s - 2]
+                           + d * DatYt[s - 1] + e * DatYt[s - 2];
+            }
+            DatYt[dF2 + 3] = DatYt[dF2 + 2] = DatYt[dF2 + 1];
+
+            // FORWARD filter
+            double[] DatZt = new double[dF2 + 2];
+            DatZt[dF2] = DatYt[dF2 + 2];
+            DatZt[dF2 + 1] = DatYt[dF2 + 3];
+            for (long t = -dF2 + 1; t <= 0; t++)
+            {
+                DatZt[-t] = a * DatYt[-t + 2] + b * DatYt[-t + 3] + c * DatYt[-t + 4]
+                            + d * DatZt[-t + 1] + e * DatZt[-t + 2];
+            }
+
+            // Calculated points copied for return
+            for (long p = 0; p < dF2; p++)
+            {
+                data[p] = DatZt[p];
+            }
+
+            return data;
         }
         #endregion
 
