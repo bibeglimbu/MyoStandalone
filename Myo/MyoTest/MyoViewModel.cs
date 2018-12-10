@@ -331,7 +331,7 @@ namespace MyoHub
             EMGPod6data.Add(e.EMGPod_6);
             EMGPod7data.Add(e.EMGPod_7);
 
-            if((DateTime.Now - TimerStart).Seconds > 1)
+            if((DateTime.Now - TimerStart).Seconds > 0.5)
             {
                 EMGdata[0] = RootMeanSquare(EMGPod0data.ToArray());
                 EMGdata[1] = RootMeanSquare(EMGPod1data.ToArray());
