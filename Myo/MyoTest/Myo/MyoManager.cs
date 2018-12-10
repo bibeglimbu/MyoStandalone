@@ -166,14 +166,6 @@ namespace MyoHub.Myo
             emgArgs.EMGPod_7= e.Myo.EmgData.GetDataForSensor(7);
             //raise the event for receiving EMG data
             OnEMGChanged(emgArgs);
-            //calculate Grip Pressure
-            CalculateGripPressureAsync(e);
-            GripPressureChangedEventArgs args = new GripPressureChangedEventArgs();
-            args.gripPressure = gripEMG;
-            //raise event when grip pressure is changed
-            OnGripPressureChanged(args);
-            //set emg data back to 0
-            gripEMG = 0;
         }
 
         private void Myo_OrientationDataAcquired(object sender, OrientationDataEventArgs e)
@@ -207,79 +199,7 @@ namespace MyoHub.Myo
 
         #endregion
 
-        private async void CalculateGripPressureAsync(EmgDataEventArgs e)
-        {
-            await Task.Run(() => CalculateGripPressure(e));
-        }
-
-        /// <summary>
-        /// total grip pressure calculated 
-        /// </summary>
-        private int gripEMG = 0;
-        /// <summary>
-        /// holds the previous state of EMG pods
-        /// </summary>
-        int[] preEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-        /// <summary>
-        /// Stores the state of EMG pods
-        /// </summary>
-        int[] storeEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-        /// <summary>
-        /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
-        /// else assign 0. It means that much variation(100 to -100) was observed propotional to higher tension in muscle. 
-        /// </summary>
-        /// <param name="e"></param>
-        private void CalculateGripPressure(EmgDataEventArgs e)
-        {
-            //Threshold to determind the fluctuation
-            int emgThreshold = 15;
-            int[] currentEmgValue = new int[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
-            int[] emgTension = new int[8];
-
-            //iterate through all the sensors and store the 1/0  in emg tension depending if the sum of previous frame of data and current frame is less than threshold
-            // 0 meaning no tension and 100 meaning lots of tension
-            for (int i = 0; i <= 7; i++)
-            {
-                storeEmgValue[i] = e.EmgData.GetDataForSensor(i);
-                currentEmgValue[i] = Math.Abs(e.EmgData.GetDataForSensor(i));
-                //Debug.WriteLine("MyoManager/" + i + " " + Math.Abs(e.EmgData.GetDataForSensor(i)));
-                try
-                {
-                    if (currentEmgValue[i] >= emgThreshold)
-                    {
-                        emgTension[i] = 1;
-
-                    }
-                    else
-                    {
-                        emgTension[i] = 0;
-                    }
-
-                }
-                catch
-                {
-                    Debug.WriteLine("Myo not connceted");
-                }
-            }
-
-            //add all value from emgTension and assign it to gripEmg
-            Array.ForEach(emgTension, delegate (int i) { gripEMG += i; });
-
-            try
-            {
-                for (int i = 0; i < 7; i++)
-                {
-                    preEmgValue[i] = currentEmgValue[i];
-                }
-            }
-            catch
-            {
-                Debug.WriteLine("No emg value");
-            }
-        }
-
-
-        public static void pingMyo()
+        public static void PingMyo()
         {
             if ((DateTime.Now - Globals.LastExecution).TotalSeconds > 1)
             {

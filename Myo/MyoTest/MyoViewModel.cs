@@ -209,12 +209,12 @@ namespace MyoHub
         ConnectorHub.ConnectorHub myConnector;
         ConnectorHub.FeedbackHub myFeedback;
 
-        private double EMGPod_0, EMGPod_1, EMGPod_2, EMGPod_3, EMGPod_4, EMGPod_5, EMGPod_6, EMGPod_7;
-
+        private DateTime TimerStart { get; set; }
         #endregion
 
         public MyoViewModel()
         {
+            this.TimerStart = DateTime.Now;
             myConnector = new ConnectorHub.ConnectorHub();
             myFeedback = new ConnectorHub.FeedbackHub();
             myConnector.init();
@@ -224,7 +224,6 @@ namespace MyoHub
             myConnector.stopRecordingEvent += MyConnector_stopRecordingEvent;
             myFeedback.feedbackReceivedEvent += MyFeedback_feedbackReceivedEvent;
 
-            myoManager.GripPressureChanged += UpdateGripPressure;
             myoManager.AccelerometerChanged += UpdateAccelerometer;
             myoManager.GyroscopeChanged += UpdateGyroscope;
             myoManager.OrientationChanged += UpdateOrientation;
@@ -263,7 +262,7 @@ namespace MyoHub
         {
             if (s.Contains("Myo"))
             {
-                MyoManager.pingMyo();
+                MyoManager.PingMyo();
 
             }
 
@@ -305,49 +304,82 @@ namespace MyoHub
             }
         }
 
+        /// <summary>
+        /// Temporary holders for emg data to be stored 
+        /// </summary>
+        List<double> EMGPod0data = new List<double>();
+        List<double> EMGPod1data = new List<double>();
+        List<double> EMGPod2data = new List<double>();
+        List<double> EMGPod3data = new List<double>();
+        List<double> EMGPod4data = new List<double>();
+        List<double> EMGPod5data = new List<double>();
+        List<double> EMGPod6data = new List<double>();
+        List<double> EMGPod7data = new List<double>();
+        /// <summary>
+        /// holder for average emg data of each second
+        /// </summary>
+        double[] EMGdata = new double[8];
+
         private void UpdateEMG(object sender, MyoManager.EMGChangedEventArgs e)
         {
-            EMGPod_0 = e.EMGPod_0;
-            EMGPod_1 = e.EMGPod_1;
-            EMGPod_2 = e.EMGPod_2;
-            EMGPod_3 = e.EMGPod_3;
-            EMGPod_4 = e.EMGPod_4;
-            EMGPod_5 = e.EMGPod_5;
-            EMGPod_6 = e.EMGPod_6;
-            EMGPod_7 = e.EMGPod_7;
-            if (Globals.IsRecording == true)
+            EMGPod0data.Add(e.EMGPod_0);
+            EMGPod1data.Add(e.EMGPod_1);
+            EMGPod2data.Add(e.EMGPod_2);
+            EMGPod3data.Add(e.EMGPod_3);
+            EMGPod4data.Add(e.EMGPod_4);
+            EMGPod5data.Add(e.EMGPod_5);
+            EMGPod6data.Add(e.EMGPod_6);
+            EMGPod7data.Add(e.EMGPod_7);
+
+            if((DateTime.Now - TimerStart).Seconds > 1)
             {
-                SendDataAsync ();
+                EMGdata[0] = RootMeanSquare(EMGPod0data.ToArray());
+                EMGdata[1] = RootMeanSquare(EMGPod1data.ToArray());
+                EMGdata[2] = RootMeanSquare(EMGPod2data.ToArray());
+                EMGdata[3] = RootMeanSquare(EMGPod3data.ToArray());
+                EMGdata[4] = RootMeanSquare(EMGPod4data.ToArray());
+                EMGdata[5] = RootMeanSquare(EMGPod5data.ToArray());
+                EMGdata[6] = RootMeanSquare(EMGPod6data.ToArray());
+                EMGdata[7] = RootMeanSquare(EMGPod7data.ToArray());
+
+                CalculateGripPressureAsync(EMGdata, 15);
+
+                for(int i = 0; i < EMGdata.Count()-1; i++)
+                {
+                    Debug.WriteLine("EMGdata " + i + " = " + EMGdata[i]);
+                }
+
+                if (Globals.IsRecording == true)
+                {
+                    SendDataAsync();
+                }
+
+                TimerStart = DateTime.Now;
+                EMGPod0data.Clear();
+                EMGPod1data.Clear();
+                EMGPod2data.Clear();
+                EMGPod3data.Clear();
+                EMGPod4data.Clear();
+                EMGPod5data.Clear();
+                EMGPod6data.Clear();
+                EMGPod7data.Clear();
             }
+
         }
 
-        private void UpdateGripPressure(object sender, MyoManager.GripPressureChangedEventArgs grip)
+        /// <summary>
+        /// calculate the RootMeanSquare from the array
+        /// </summary>
+        /// <param name="doubleList"></param>
+        /// <returns></returns>
+        private double RootMeanSquare(double[] doubleList)
         {
-            GripPressure = grip.gripPressure;
-            Task.Run(() =>
+            double sum = 0;
+            for (int i = 0; i < doubleList.Length; i++)
             {
-                if (GripPressure >= 4)
-                {
-                    try
-                    {
-                        if ((DateTime.Now - Globals.LastExecution).TotalSeconds > 1)
-                        {
-                            Debug.WriteLine("gripEmg" + GripPressure);
-                        }
-                        //myConnector.sendFeedback("Read Grip the pen gently");
-                        MyoManager.pingMyo();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine("feedback not sent" + e.ToString());
-                    }
-
-                }
-            });
-            if (Globals.IsRecording == true)
-            {
-                SendDataAsync();
+                sum += (doubleList[i] * doubleList[i]);
             }
+            return Math.Sqrt(sum / doubleList.Length);
         }
 
         #endregion
@@ -440,14 +472,14 @@ namespace MyoHub
                 values.Add(GyroscopeY.ToString());
                 values.Add(GyroscopeZ.ToString());
                 values.Add(GripPressure.ToString());
-                values.Add(EMGPod_0.ToString());
-                values.Add(EMGPod_1.ToString());
-                values.Add(EMGPod_2.ToString());
-                values.Add(EMGPod_3.ToString());
-                values.Add(EMGPod_4.ToString());
-                values.Add(EMGPod_5.ToString());
-                values.Add(EMGPod_6.ToString());
-                values.Add(EMGPod_7.ToString());
+                values.Add(EMGdata[0].ToString());
+                values.Add(EMGdata[1].ToString());
+                values.Add(EMGdata[2].ToString());
+                values.Add(EMGdata[3].ToString());
+                values.Add(EMGdata[4].ToString());
+                values.Add(EMGdata[5].ToString());
+                values.Add(EMGdata[6].ToString());
+                values.Add(EMGdata[7].ToString());
                 myConnector.storeFrame(values);
             }
             catch (Exception ex)
@@ -462,74 +494,53 @@ namespace MyoHub
         }
         #endregion
 
-        #region filterData
-        /// <summary>
-        /// This function returns the data filtered. Converted to C# 2 July 2014.
-        /// Original source written in VBA for Microsoft Excel, 2000 by Sam Van
-        /// Wassenbergh (University of Antwerp), 6 june 2007.
-        /// </summary>
-        /// <param name="indata"></param>
-        /// <param name="deltaTimeinsec"></param>
-        /// <param name="CutOff"></param>
-        /// <returns></returns>
-        public static double[] Butterworth(double[] indata, double deltaTimeinsec, double CutOff)
+        private async void CalculateGripPressureAsync(double[] currentEmgValues, double emgThreshold)
         {
-            if (indata == null) return null;
-            if (CutOff == 0) return indata;
-
-            double Samplingrate = 1 / deltaTimeinsec;
-            long dF2 = indata.Length - 1;        // The data range is set with dF2
-            double[] Dat2 = new double[dF2 + 4]; // Array with 4 extra points front and back
-            double[] data = indata; // Ptr., changes passed data
-
-            // Copy indata to Dat2
-            for (long r = 0; r < dF2; r++)
-            {
-                Dat2[2 + r] = indata[r];
-            }
-            Dat2[1] = Dat2[0] = indata[0];
-            Dat2[dF2 + 3] = Dat2[dF2 + 2] = indata[dF2];
-
-            const double pi = 3.14159265358979;
-            double wc = Math.Tan(CutOff * pi / Samplingrate);
-            double k1 = 1.414213562 * wc; // Sqrt(2) * wc
-            double k2 = wc * wc;
-            double a = k2 / (1 + k1 + k2);
-            double b = 2 * a;
-            double c = a;
-            double k3 = b / k2;
-            double d = -2 * a + k3;
-            double e = 1 - (2 * a) - k3;
-
-            // RECURSIVE TRIGGERS - ENABLE filter is performed (first, last points constant)
-            double[] DatYt = new double[dF2 + 4];
-            DatYt[1] = DatYt[0] = indata[0];
-            for (long s = 2; s < dF2 + 2; s++)
-            {
-                DatYt[s] = a * Dat2[s] + b * Dat2[s - 1] + c * Dat2[s - 2]
-                           + d * DatYt[s - 1] + e * DatYt[s - 2];
-            }
-            DatYt[dF2 + 3] = DatYt[dF2 + 2] = DatYt[dF2 + 1];
-
-            // FORWARD filter
-            double[] DatZt = new double[dF2 + 2];
-            DatZt[dF2] = DatYt[dF2 + 2];
-            DatZt[dF2 + 1] = DatYt[dF2 + 3];
-            for (long t = -dF2 + 1; t <= 0; t++)
-            {
-                DatZt[-t] = a * DatYt[-t + 2] + b * DatYt[-t + 3] + c * DatYt[-t + 4]
-                            + d * DatZt[-t + 1] + e * DatZt[-t + 2];
-            }
-
-            // Calculated points copied for return
-            for (long p = 0; p < dF2; p++)
-            {
-                data[p] = DatZt[p];
-            }
-
-            return data;
+            await Task.Run(() => CalculateGripPressure(currentEmgValues, emgThreshold));
         }
-        #endregion
+
+        /// <summary>
+        /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
+        /// else assign 0. It means that much variation(100 to -100) was observed propotional to higher tension in muscle. 
+        /// </summary>
+        /// <param name="e"></param>
+        private void CalculateGripPressure(double[] currentEmgValues, double emgThreshold)
+        {
+            int[] emgTension = new int[8];
+            int gripEMG = 0;
+
+            //iterate through all the sensors and store the 1/0  in emg tension depending if the sum of previous frame of data and current frame is less than threshold
+            // 0 meaning no tension and 100 meaning lots of tension
+            for (int i = 0; i <= 7; i++)
+            {
+                try
+                {
+                    if (currentEmgValues[i] >= emgThreshold)
+                    {
+                        emgTension[i] = 1;
+
+                    }
+                    else
+                    {
+                        emgTension[i] = 0;
+                    }
+
+                }
+                catch
+                {
+                    Debug.WriteLine("Error Calculating GripPressure");
+                }
+            }
+
+            //add all value from emgTension and assign it to gripEmg
+            Array.ForEach(emgTension, delegate (int i) { gripEMG += i; });
+            GripPressure = gripEMG;
+            if (gripEMG >=5)
+            {
+                MyoManager.PingMyo();
+                Debug.WriteLine("GripPressure = " + gripEMG);
+            }
+        }
 
     }
 }
