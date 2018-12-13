@@ -34,6 +34,9 @@ namespace MyoHub
         MyoManager myoManager = new MyoManager();
 
         private string _debugText = " ";
+        /// <summary>
+        /// Text messages that need to be displayed in tge view
+        /// </summary>
         public string DebugText
         {
             get { return _debugText; }
@@ -45,6 +48,7 @@ namespace MyoHub
             }
         }
 
+        /*Orientation values of the Myo*/
         private float _orientationW = 0;
         public float OrientationW
         {
@@ -85,6 +89,7 @@ namespace MyoHub
                 NotifyPropertyChanged();
             }
         }
+        /*Accelerometer values of the Myo*/
         private float _accelerometerX = 0;
         public float AccelerometerX
         {
@@ -115,6 +120,8 @@ namespace MyoHub
                 NotifyPropertyChanged();
             }
         }
+
+        /*Gryroscope values of the Myo*/
         private float _gyroscopeX = 0;
         public float GyroscopeX
         {
@@ -146,7 +153,12 @@ namespace MyoHub
             }
         }
 
+        
         private int _gripPressure = 0;
+        /// <summary>
+        /// Pressure with which the user holds the pen. The value is calculated using EMG and returns
+        /// a value between 1-7, which represents the state of each EMG pod. 
+        /// </summary>
         public int GripPressure
         {
             get { return _gripPressure; }
@@ -188,29 +200,14 @@ namespace MyoHub
             }
         }
 
-        private ICommand _buttonClicked;
-
-        public ICommand ButtonClicked
-        {
-            get
-            {
-                if (_buttonClicked == null)
-                {
-                           _buttonClicked = new RelayCommand(
-                               param => this.StartRecordingData(),
-                               null
-                               );  
-                }
-
-                return _buttonClicked;
-            }
-        }
+        /// <summary>
+        /// Property which holds the time for the timer
+        /// </summary>
+        private DateTime TimerStart { get; set; }
+        #endregion
 
         ConnectorHub.ConnectorHub myConnector;
         ConnectorHub.FeedbackHub myFeedback;
-
-        private DateTime TimerStart { get; set; }
-        #endregion
 
         public MyoViewModel()
         {
@@ -233,11 +230,22 @@ namespace MyoHub
 
         }
 
+        #region Events handlers
+
+        /// <summary>
+        /// When message is recieved from the learning hub
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="feedback"></param>
         private void MyFeedback_feedbackReceivedEvent(object sender, string feedback)
         {
             ReadStream(feedback);
         }
 
+        /// <summary>
+        /// Stop recording message received
+        /// </summary>
+        /// <param name="sender"></param>
         private void MyConnector_stopRecordingEvent(object sender)
         {
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
@@ -248,6 +256,10 @@ namespace MyoHub
                         }));
         }
 
+        /// <summary>
+        /// start recording message received
+        /// </summary>
+        /// <param name="sender"></param>
         private void MyConnector_startRecordingEvent(object sender)
         {
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(
@@ -258,8 +270,13 @@ namespace MyoHub
                         }));
         }
 
+        /// <summary>
+        /// Read the string message received
+        /// </summary>
+        /// <param name="s"></param>
         private void ReadStream(String s)
         {
+            //if the string contains Myo vibrate myo
             if (s.Contains("Myo"))
             {
                 MyoManager.PingMyo();
@@ -268,8 +285,32 @@ namespace MyoHub
 
         }
 
-        #region Events handlers
+        private ICommand _buttonClicked;
 
+        /// <summary>
+        /// When the record button is manually clicked
+        /// </summary>
+        public ICommand ButtonClicked
+        {
+            get
+            {
+                if (_buttonClicked == null)
+                {
+                    _buttonClicked = new RelayCommand(
+                        param => this.StartRecordingData(),
+                        null
+                        );
+                }
+
+                return _buttonClicked;
+            }
+        }
+
+        /// <summary>
+        /// Eventhandler for when Orientation data is received
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="o"></param>
         private void UpdateOrientation(object sender, MyoManager.OrientationChangedEventArgs o)
         {
             OrientationW = o.OrientationW;
@@ -282,6 +323,11 @@ namespace MyoHub
             }
         }
 
+        /// <summary>
+        /// Eventhandler for when the Gyroscope data is received
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UpdateGyroscope(object sender, MyoManager.GyroscopeChangedEventArgs e)
         {
             GyroscopeX = e.gyroscopeX;
@@ -293,6 +339,11 @@ namespace MyoHub
             }
         }
 
+        /// <summary>
+        /// Eventhandler for when the Accelerometer data is received
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="a"></param>
         private void UpdateAccelerometer(object sender, MyoManager.AccelerometerChangedEventArgs a)
         {
             AccelerometerX = a.accelerometerX;
@@ -320,8 +371,14 @@ namespace MyoHub
         /// </summary>
         double[] EMGdata = new double[8];
 
+        /// <summary>
+        /// Eventhandler for when the EMG data is received
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UpdateEMG(object sender, MyoManager.EMGChangedEventArgs e)
         {
+            //store individual emd pod data in designated list until 0.5 secs time is called
             EMGPod0data.Add(e.EMGPod_0);
             EMGPod1data.Add(e.EMGPod_1);
             EMGPod2data.Add(e.EMGPod_2);
@@ -330,9 +387,10 @@ namespace MyoHub
             EMGPod5data.Add(e.EMGPod_5);
             EMGPod6data.Add(e.EMGPod_6);
             EMGPod7data.Add(e.EMGPod_7);
-
+            //when the timepsan is more than 0.5 secs
             if((DateTime.Now - TimerStart).Seconds > 0.5)
             {
+                //take the root mean square of whole array and then store it into the master emg data holder
                 EMGdata[0] = RootMeanSquare(EMGPod0data.ToArray());
                 EMGdata[1] = RootMeanSquare(EMGPod1data.ToArray());
                 EMGdata[2] = RootMeanSquare(EMGPod2data.ToArray());
@@ -341,9 +399,9 @@ namespace MyoHub
                 EMGdata[5] = RootMeanSquare(EMGPod5data.ToArray());
                 EMGdata[6] = RootMeanSquare(EMGPod6data.ToArray());
                 EMGdata[7] = RootMeanSquare(EMGPod7data.ToArray());
-
+                //calculate grippressure with the master emg data holder
                 CalculateGripPressureAsync(EMGdata, 15);
-
+                //debud all the emd data
                 for(int i = 0; i < EMGdata.Count()-1; i++)
                 {
                     Debug.WriteLine("EMGdata " + i + " = " + EMGdata[i]);
@@ -353,7 +411,7 @@ namespace MyoHub
                 {
                     SendDataAsync();
                 }
-
+                ///clear the list that were holding the previous data
                 TimerStart = DateTime.Now;
                 EMGPod0data.Clear();
                 EMGPod1data.Clear();
@@ -385,7 +443,9 @@ namespace MyoHub
         #endregion
 
         #region UI
-
+        /// <summary>
+        /// Method called when recording is started
+        /// </summary>
         public void StartRecordingData()
         {
             Debug.WriteLine("ButtonClicked" + Globals.IsRecording);
@@ -407,6 +467,9 @@ namespace MyoHub
         #endregion
 
         #region Send data
+        /// <summary>
+        /// set the names of the values that needs to recorded in the learning hub
+        /// </summary>
         private async void setValueNames()
         {
             await Task.Run(() =>
@@ -494,22 +557,30 @@ namespace MyoHub
         }
         #endregion
 
+        /// <summary>
+        /// Calculate the GripPressure async
+        /// </summary>
+        /// <param name="currentEmgValues"></param>
+        /// <param name="emgThreshold"></param>
         private async void CalculateGripPressureAsync(double[] currentEmgValues, double emgThreshold)
         {
             await Task.Run(() => CalculateGripPressure(currentEmgValues, emgThreshold));
         }
 
         /// <summary>
-        /// Iterate through each emg sensor in myo and assign 1 if the sum of the first and second frame of emg has a sum of more than 20.
-        /// else assign 0. It means that much variation(100 to -100) was observed propotional to higher tension in muscle. 
+        /// Method for calculating the GripPressure. Iterate through each emg sensor pod in myo and assign 1 if RMS value is more than the threshold,
+        /// else assign 0. When the RMS value of the Emg pod is more than threshold it means that the the emg recorded higher musvle potential. 
         /// </summary>
         /// <param name="e"></param>
         private void CalculateGripPressure(double[] currentEmgValues, double emgThreshold)
         {
+            //temp array that holds 1 or 0 for each of the myo pod to be added at the last
             int[] emgTension = new int[8];
+            //temporary value that holds the value of grip pressure 
             int gripEMG = 0;
 
-            //iterate through all the sensors and store the 1/0  in emg tension depending if the sum of previous frame of data and current frame is less than threshold
+            //iterate through all the emg pods and store 1/0  in emgTension[] depending on 
+            //if the RMS is more or less than threshold
             // 0 meaning no tension and 100 meaning lots of tension
             for (int i = 0; i <= 7; i++)
             {
@@ -534,9 +605,12 @@ namespace MyoHub
 
             //add all value from emgTension and assign it to gripEmg
             Array.ForEach(emgTension, delegate (int i) { gripEMG += i; });
+            //assign it to grippressure
             GripPressure = gripEMG;
+            //if the grip pressure is more than 5, or more than 5 pods return high potential readings
             if (gripEMG >=5)
             {
+                //vibrate myo
                 MyoManager.PingMyo();
                 Debug.WriteLine("GripPressure = " + gripEMG);
             }

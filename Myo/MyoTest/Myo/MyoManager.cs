@@ -18,10 +18,11 @@ namespace MyoHub.Myo
         #endregion
 
         #region events
+        
+        public event EventHandler<GripPressureChangedEventArgs> GripPressureChanged;
         /// <summary>
         /// Event raised when the grip pressure has changed over the last iteration
         /// </summary>
-        public event EventHandler<GripPressureChangedEventArgs> GripPressureChanged;
         protected virtual void OnGripPressureChanged(GripPressureChangedEventArgs gripEvent)
         {
             EventHandler<GripPressureChangedEventArgs> handler = GripPressureChanged;
@@ -37,6 +38,10 @@ namespace MyoHub.Myo
         }
 
         public event EventHandler<AccelerometerChangedEventArgs> AccelerometerChanged;
+        /// <summary>
+        /// Event raised when accelerometer data has changed
+        /// </summary>
+        /// <param name="accEvent"></param>
         protected virtual void OnAccelerometerChanged(AccelerometerChangedEventArgs accEvent)
         {
             EventHandler<AccelerometerChangedEventArgs> handler = AccelerometerChanged;
@@ -55,6 +60,10 @@ namespace MyoHub.Myo
         }
 
         public event EventHandler<GyroscopeChangedEventArgs> GyroscopeChanged;
+        /// <summary>
+        /// event raised when the gyroscope data has changed
+        /// </summary>
+        /// <param name="gyroEvent"></param>
         protected virtual void OnGyroscopeChanged(GyroscopeChangedEventArgs gyroEvent)
         {
             EventHandler<GyroscopeChangedEventArgs> handler = GyroscopeChanged;
@@ -72,6 +81,10 @@ namespace MyoHub.Myo
         }
 
         public event EventHandler<OrientationChangedEventArgs> OrientationChanged;
+        /// <summary>
+        /// event raise when the oreientation data has changed
+        /// </summary>
+        /// <param name="OrientationEvent"></param>
         protected virtual void OnOrientationChanged(OrientationChangedEventArgs OrientationEvent)
         {
             EventHandler<OrientationChangedEventArgs> handler = OrientationChanged;
@@ -90,6 +103,10 @@ namespace MyoHub.Myo
         }
 
         public event EventHandler<EMGChangedEventArgs> EMGChanged;
+        /// <summary>
+        /// event raised when the EMG data has changed
+        /// </summary>
+        /// <param name="EMGEvent"></param>
         protected virtual void OnEMGChanged(EMGChangedEventArgs EMGEvent)
         {
             EventHandler<EMGChangedEventArgs> handler = EMGChanged;
@@ -199,6 +216,9 @@ namespace MyoHub.Myo
 
         #endregion
 
+        /// <summary>
+        /// Method for vibrating myo
+        /// </summary>
         public static void PingMyo()
         {
             if ((DateTime.Now - Globals.LastExecution).TotalSeconds > 1)
