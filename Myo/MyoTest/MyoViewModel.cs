@@ -33,6 +33,16 @@ namespace MyoHub
 
         MyoManager myoManager = new MyoManager();
 
+        private bool _activateMyo = false;
+        public bool ActivateMyo
+        {
+            get { return _activateMyo; }
+            set
+            {
+                _activateMyo = value;
+                NotifyPropertyChanged();
+            }
+        }
         private string _debugText = " ";
         /// <summary>
         /// Text messages that need to be displayed in tge view
@@ -608,10 +618,13 @@ namespace MyoHub
             //assign it to grippressure
             GripPressure = gripEMG;
             //if the grip pressure is more than 5, or more than 5 pods return high potential readings
-            if (gripEMG >=5)
+            if (gripEMG >=4)
             {
                 //vibrate myo
-                MyoManager.PingMyo();
+                if (ActivateMyo)
+                {
+                    MyoManager.PingMyo();
+                }
                 Debug.WriteLine("GripPressure = " + gripEMG);
             }
         }
